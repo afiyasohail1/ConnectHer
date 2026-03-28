@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ community.name }} – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/community_feed.css') }}">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard">🏠 Home</a></li>
+      <li class="active"><a href="/communities">🌸 Communities</a></li>
+      <li><a href="/items">🛍️ Items</a></li>
+      <li><a href="/profile">👤 Profile</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main -->
+  <main class="main-content">
+
+    <!-- Community Hero Banner -->
+    <div class="community-banner">
+      <div class="banner-icon">{{ community.icon | default('🌸') }}</div>
+      <div class="banner-info">
+        <h1>{{ community.name }}</h1>
+        <p>{{ community.description }}</p>
+        <span class="member-pill">👥 {{ member_count }} members</span>
+      </div>
+      <a href="/communities" class="btn-back">← Back to Communities</a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="feed-layout">
+
+      <!-- Create Post Box -->
+      <div class="create-post-box">
+        <div class="create-post-header">
+          <div class="avatar-circle">{{ session_username[0] | upper if session_username else '?' }}</div>
+          <span class="create-label">Share something with the community…</span>
+        </div>
+        <form method="POST" action="/communities/{{ community._id }}/post" enctype="multipart/form-data">
+          <textarea name="content" id="postContent" placeholder="What's on your mind?" maxlength="1000" oninput="updateCharCount()"></textarea>
+          <div class="post-form-footer">
+            <div class="post-options">
+              <label class="img-upload-label" for="imageUpload">
+                📷 Add Photo
+                <input type="file" id="imageUpload" name="image" accept="image/*" onchange="previewImage(event)" style="display:none"/>
+              </label>
+              <span class="char-count" id="charCount">0 / 1000</span>
+            </div>
+            <button type="submit" class="btn-post">Post ✦</button>
+          </div>
+          <div id="imagePreview" class="image-preview" style="display:none">
+            <img id="previewImg" src="" alt="preview"/>
+            <button type="button" onclick="clearImage()" class="clear-img">✕</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Posts Feed -->
+      <div class="posts-feed" id="postsFeed">
+        {% for post in posts %}
+        <article class="post-card" id="post-{{ post._id }}">
+
+          <!-- Post Header -->
+          <div class="post-header">
+            <div class="post-avatar">{{ post.author_name[0] | upper if post.author_name else '?' }}</div>
+            <div class="post-meta">
+              <span class="post-author">{{ post.author_name | default('Anonymous') }}</span>
+              <span class="post-time">{{ post.created_at.strftime('%b %d, %Y · %I:%M %p') if post.created_at else '' }}</span>
+            </div>
+            <!-- Edit/Delete if own post -->
+            {% if post.author_id == session_user_id %}
+            <div class="post-menu">
+              <button class="menu-btn" onclick="toggleMenu('menu-{{ post._id }}')">⋯</button>
+              <div class="dropdown-menu" id="menu-{{ post._id }}">
+                <a href="/posts/{{ post._id }}/edit">✏️ Edit</a>
+                <form method="POST" action="/posts/{{ post._id }}/delete">
+                  <button type="submit" class="dropdown-delete">🗑️ Delete</button>
+                </form>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Post Content -->
+          <div class="post-content">
+            <p>{{ post.content }}</p>
+            {% if post.image_url %}
+            <div class="post-image">
+              <img src="{{ post.image_url }}" alt="Post image"/>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Post Actions -->
+          <div class="post-actions">
+
+            <!-- Like -->
+            <form method="POST" action="/posts/{{ post._id }}/like" style="display:inline">
+              <button type="submit" class="action-btn like-btn {% if session_user_id in post.liked_by %}liked{% endif %}">
+                {% if session_user_id in post.liked_by %}💜{% else %}🤍{% endif %}
+                <span>{{ post.likes | default(0) }}</span>
+              </button>
+            </form>
+
+            <!-- Comment toggle -->
+            <button class="action-btn" onclick="toggleComments('comments-{{ post._id }}')">
+              💬 <span>{{ post.comments | length if post.comments else 0 }}</span>
+            </button>
+
+            <!-- Report -->
+            {% if post.author_id != session_user_id %}
+            <form method="POST" action="/posts/{{ post._id }}/report" style="display:inline; margin-left:auto">
+              <button type="submit" class="action-btn report-btn" title="Report post">🚩 Report</button>
+            </form>
+            {% endif %}
+
+          </div>
+
+          <!-- Comments Section -->
+          <div class="comments-section" id="comments-{{ post._id }}" style="display:none">
+            {% for comment in post.comments %}
+            <div class="comment">
+              <div class="comment-avatar">{{ comment.author_name[0] | upper if comment.author_name else '?' }}</div>
+              <div class="comment-body">
+                <span class="comment-author">{{ comment.author_name }}</span>
+                <p class="comment-text">{{ comment.text }}</p>
+              </div>
+            </div>
+            {% endfor %}
+
+            <!-- Add Comment -->
+            <form method="POST" action="/posts/{{ post._id }}/comment" class="comment-form">
+              <input type="text" name="comment_text" placeholder="Write a comment…" required maxlength="300"/>
+              <button type="submit" class="btn-comment">Send</button>
+            </form>
+          </div>
+
+        </article>
+        {% else %}
+        <div class="empty-feed">
+          <p>🌸 No posts yet. Be the first to share something!</p>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/community_feed.js') }}"></script>
+</body>
+</html>

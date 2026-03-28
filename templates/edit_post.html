@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Post – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/community_feed.css') }}">
+  <style>
+    .edit-container {
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 0 24px;
+    }
+    .edit-box {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(166,128,184,0.15);
+      padding: 32px;
+    }
+    .edit-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      color: #2D1B3D;
+      margin-bottom: 20px;
+    }
+    .edit-box textarea {
+      width: 100%;
+      border: 1.5px solid rgba(166,128,184,0.3);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14.5px;
+      color: #2D1B3D;
+      min-height: 140px;
+      resize: none;
+      outline: none;
+      margin-bottom: 18px;
+    }
+    .edit-box textarea:focus {
+      border-color: #A680B8;
+      box-shadow: 0 0 0 4px rgba(166,128,184,0.12);
+    }
+    .edit-actions { display: flex; gap: 12px; }
+    .btn-save {
+      background: #A680B8; color: #fff;
+      border: none; border-radius: 50px;
+      padding: 10px 28px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-save:hover { background: #8B5FA0; }
+    .btn-cancel {
+      background: transparent; color: #5C4A6E;
+      border: 1.5px solid #C4A0D8; border-radius: 50px;
+      padding: 10px 24px; font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/communities">🌸 Communities</a></li>
+    </ul>
+  </nav>
+  <main class="main-content">
+    <div class="edit-container">
+      <div class="edit-box">
+        <h2>✏️ Edit Your Post</h2>
+        <form method="POST">
+          <textarea name="content" maxlength="1000">{{ post.content }}</textarea>
+          <div class="edit-actions">
+            <button type="submit" class="btn-save">Save Changes</button>
+            <a href="/communities/{{ post.community_id }}/feed" class="btn-cancel">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

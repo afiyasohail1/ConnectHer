@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Communities – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/communities.css') }}">
+</head>
+<body>
+
+  <!-- Sidebar Nav -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard">🏠 Home</a></li>
+      <li class="active"><a href="/communities">🌸 Communities</a></li>
+      <li><a href="/items">🛍️ Items</a></li>
+      <li><a href="/profile">👤 Profile</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Header -->
+    <header class="page-header">
+      <div class="header-text">
+        <h1>Communities</h1>
+        <p>Find your people. Join the conversation.</p>
+      </div>
+      <div class="header-search">
+        <input type="text" id="searchInput" placeholder="Search communities…" oninput="filterCommunities()"/>
+        <span class="search-icon">🔍</span>
+      </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('all', this)">All Communities</button>
+      <button class="tab" onclick="switchTab('joined', this)">My Communities</button>
+    </div>
+
+    <!-- All Communities Grid -->
+    <section id="tab-all" class="tab-section active">
+      <div class="community-grid" id="communityGrid">
+        {% for community in communities %}
+        <div class="community-card {% if community._id|string in joined_ids %}joined{% endif %}"
+             data-name="{{ community.name|lower }}">
+          <div class="card-accent" style="background: {{ community.color | default('var(--accent)') }}"></div>
+          <div class="card-body">
+            <div class="card-icon">{{ community.icon | default('🌸') }}</div>
+            <h3 class="card-title">{{ community.name }}</h3>
+            <p class="card-desc">{{ community.description }}</p>
+            <div class="card-meta">
+              <span class="member-count">👥 {{ community.member_count | default(0) }} members</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            {% if community._id|string in joined_ids %}
+              <span class="badge-joined">✓ Joined</span>
+              <form method="POST" action="/communities/{{ community._id }}/leave" style="display:inline">
+                <button type="submit" class="btn btn-leave">Leave</button>
+              </form>
+              <a href="/communities/{{ community._id }}/feed" class="btn btn-view">View Feed →</a>
+            {% else %}
+              <form method="POST" action="/communities/{{ community._id }}/join" style="display:inline">
+                <button type="submit" class="btn btn-join">Join</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <p>No communities yet. Check back soon! 🌸</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- My Communities -->
+    <section id="tab-joined" class="tab-section">
+      <div class="community-grid">
+        {% set joined_communities = communities | selectattr('_id', 'in', joined_ids) | list %}
+        {% for community in communities %}
+          {% if community._id|string in joined_ids %}
+          <div class="community-card joined">
+            <div class="card-accent" style="background: {{ community.color | default('var(--accent)') }}"></div>
+            <div class="card-body">
+              <div class="card-icon">{{ community.icon | default('🌸') }}</div>
+              <h3 class="card-title">{{ community.name }}</h3>
+              <p class="card-desc">{{ community.description }}</p>
+              <div class="card-meta">
+                <span class="member-count">👥 {{ community.member_count | default(0) }} members</span>
+              </div>
+            </div>
+            <div class="card-actions">
+              <span class="badge-joined">✓ Joined</span>
+              <form method="POST" action="/communities/{{ community._id }}/leave" style="display:inline">
+                <button type="submit" class="btn btn-leave">Leave</button>
+              </form>
+              <a href="/communities/{{ community._id }}/feed" class="btn btn-view">View Feed →</a>
+            </div>
+          </div>
+          {% endif %}
+        {% else %}
+        {% endfor %}
+        {% if not joined_ids %}
+        <div class="empty-state">
+          <p>You haven't joined any communities yet. Explore above! 💜</p>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='js/communities.js') }}"></script>
+</body>
+</html>
