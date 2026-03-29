@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Community – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/create_community.css') }}">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/dashboard">🏠 Home</a></li>
+      <li class="active"><a href="/communities">🌸 Communities</a></li>
+      <li><a href="/items">🛍️ Items</a></li>
+      <li><a href="/profile">👤 Profile</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-wrap">
+
+      <!-- Header -->
+      <div class="page-header">
+        <a href="/communities" class="back-link">← Back to Communities</a>
+        <h1>Create a Community</h1>
+        <p>Start a space for women who share your interests 🌸</p>
+      </div>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Info Banner (user approval notice) -->
+      {% if not is_admin %}
+      <div class="approval-notice">
+        <span class="notice-icon">ℹ️</span>
+        <div>
+          <strong>Pending Admin Approval</strong>
+          <p>Your community request will be reviewed by an admin before going live. This usually takes less than 24 hours.</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Form Card -->
+      <div class="form-card">
+        <form method="POST" action="/communities/create" enctype="multipart/form-data" id="createForm">
+
+          <!-- Image Upload -->
+          <div class="image-upload-section">
+            <div class="image-preview-circle" id="imageCircle">
+              <img id="previewImg" src="" alt="" style="display:none"/>
+              <div class="image-placeholder" id="imagePlaceholder">
+                <span class="camera-icon">📷</span>
+                <span>Add Photo</span>
+                <span class="optional-tag">(optional)</span>
+              </div>
+            </div>
+            <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)" style="display:none"/>
+            <div class="image-btns">
+              <button type="button" class="btn-upload" onclick="document.getElementById('imageInput').click()">
+                Upload Image
+              </button>
+              <button type="button" class="btn-clear-img" id="clearBtn" onclick="clearImage()" style="display:none">
+                Remove
+              </button>
+            </div>
+          </div>
+
+          <!-- Emoji Icon Picker -->
+          <div class="form-group">
+            <label>Community Icon <span class="required">*</span></label>
+            <p class="field-hint">Pick an emoji that represents your community</p>
+            <div class="emoji-grid">
+              {% set emojis = ['📚','🎉','💜','👗','🍜','💼','📖','🏃‍♀️','🎨','💻','🌸','🎵','🌿','✈️','🎭','🔬','🏋️‍♀️','🧘‍♀️','🎮','🌙'] %}
+              {% for emoji in emojis %}
+              <button type="button" class="emoji-btn" onclick="selectEmoji('{{ emoji }}', this)">{{ emoji }}</button>
+              {% endfor %}
+            </div>
+            <input type="hidden" name="icon" id="iconInput" value="🌸" required/>
+            <div class="selected-emoji-preview">
+              Selected: <span id="selectedEmojiDisplay">🌸</span>
+            </div>
+          </div>
+
+          <!-- Community Name -->
+          <div class="form-group">
+            <label for="name">Community Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" placeholder="e.g. Study Buddies, Foodies, Book Club…"
+                   maxlength="50" oninput="updateNameCount()" required/>
+            <div class="field-footer">
+              <span class="field-hint">Keep it short and descriptive</span>
+              <span class="char-count" id="nameCount">0 / 50</span>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description">Description <span class="required">*</span></label>
+            <textarea id="description" name="description" placeholder="What is this community about? Who should join?"
+                      maxlength="300" oninput="updateDescCount()" required></textarea>
+            <div class="field-footer">
+              <span class="field-hint">Help others understand what your community is about</span>
+              <span class="char-count" id="descCount">0 / 300</span>
+            </div>
+          </div>
+
+          <!-- Accent Color -->
+          <div class="form-group">
+            <label>Accent Color</label>
+            <p class="field-hint">Choose a color for your community card</p>
+            <div class="color-grid">
+              <button type="button" class="color-btn active" style="background:#A680B8" onclick="selectColor('#A680B8', this)"></button>
+              <button type="button" class="color-btn" style="background:#C4A0D8" onclick="selectColor('#C4A0D8', this)"></button>
+              <button type="button" class="color-btn" style="background:#8B5FA0" onclick="selectColor('#8B5FA0', this)"></button>
+              <button type="button" class="color-btn" style="background:#D4A0C8" onclick="selectColor('#D4A0C8', this)"></button>
+              <button type="button" class="color-btn" style="background:#7B9EC8" onclick="selectColor('#7B9EC8', this)"></button>
+              <button type="button" class="color-btn" style="background:#A0C8A0" onclick="selectColor('#A0C8A0', this)"></button>
+              <button type="button" class="color-btn" style="background:#C8A07B" onclick="selectColor('#C8A07B', this)"></button>
+              <button type="button" class="color-btn" style="background:#C87B7B" onclick="selectColor('#C87B7B', this)"></button>
+            </div>
+            <input type="hidden" name="color" id="colorInput" value="#A680B8"/>
+          </div>
+
+          <!-- Submit -->
+          <div class="form-actions">
+            <a href="/communities" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-submit">
+              {% if is_admin %}
+                ✦ Create Community
+              {% else %}
+                ✦ Submit for Approval
+              {% endif %}
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/create_community.js') }}"></script>
+</body>
+</html>

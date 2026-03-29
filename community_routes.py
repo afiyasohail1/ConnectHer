@@ -16,7 +16,7 @@ def communities():
         return redirect(url_for('fake_login'))
     db = get_db()
     user_id = session['user_id']
-    all_communities = list(db.communities.find())
+    all_communities = list(db.communities.find({'status': 'active'}))
     memberships = db.memberships.find({'user_id': user_id})
     joined_ids = {str(m['community_id']) for m in memberships}
     for community in all_communities:
@@ -213,3 +213,128 @@ def report_post(post_id):
                            'status': 'pending', 'created_at': datetime.utcnow()})
     flash('Post reported. Our admin will review it. 🚩', 'info')
     return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+
+
+# ---------------------------------------------------------------------------
+# Create Community page — GET shows form, POST submits it
+# Users: status = 'pending' (needs admin approval)
+# Admins: status = 'active' (goes live immediately)
+# Route: GET+POST /communities/create
+# ---------------------------------------------------------------------------
+@community_bp.route('/communities/create', methods=['GET', 'POST'])
+def create_community():
+    if 'user_id' not in session:
+        flash('Please log in first.', 'danger')
+        return redirect(url_for('fake_login'))
+
+    db = get_db()
+    user_id  = session['user_id']
+   
+
+    if request.method == 'POST':
+        name        = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip()
+        icon        = request.form.get('icon', '🌸')
+        color       = request.form.get('color', '#A680B8')
+        image_url   = None
+
+        # Validate required fields
+        if not name or not description:
+            flash('Name and description are required.', 'danger')
+            return redirect(url_for('community.create_community'))
+
+        # Check for duplicate name
+        existing = db.communities.find_one({'name': {'$regex': f'^{name}$', '$options': 'i'}})
+        if existing:
+            flash('A community with that name already exists.', 'danger')
+            return redirect(url_for('community.create_community'))
+
+        # Handle optional image upload
+        image_file = request.files.get('image')
+        if image_file and image_file.filename:
+            allowed = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+            ext = image_file.filename.rsplit('.', 1)[-1].lower()
+            if ext not in allowed:
+                flash('Invalid image format. Use PNG, JPG, GIF or WEBP.', 'danger')
+                return redirect(url_for('community.create_community'))
+            upload_folder = os.path.join('static', 'uploads')
+            os.makedirs(upload_folder, exist_ok=True)
+            filename  = f"community_{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}_{image_file.filename}"
+            image_file.save(os.path.join(upload_folder, filename))
+            image_url = f"/static/uploads/{filename}"
+
+        # Status depends on who is creating
+        status ='pending'
+        
+
+        db.communities.insert_one({
+            'name':            name,
+            'description':     description,
+            'icon':            icon,
+            'color':           color,
+            'image_url':       image_url,
+            'status':          status,
+            'created_by':      user_id,
+            'created_by_name': session.get('username', 'Unknown'),
+            'created_at':      datetime.utcnow(),
+            'member_count':    0
+        })
+
+        flash(f'Your community "{name}" has been submitted for admin approval! 🌸', 'success')
+        return redirect(url_for('community.communities'))
+
+    return render_template('create_community.html', is_admin=False)
+
+
+
+# ---------------------------------------------------------------------------
+# Admin: View pending communities
+# Route: GET /admin/communities/pending
+# ---------------------------------------------------------------------------
+@community_bp.route('/admin/communities/pending')
+def pending_communities():
+    if 'user_id' not in session:
+        flash('Please log in first.', 'danger')
+        return redirect(url_for('fake_login'))
+    if not session.get('is_admin', False):
+        flash('Admin access only.', 'danger')
+        return redirect(url_for('community.communities'))
+
+    db = get_db()
+    pending = list(db.communities.find({'status': 'pending'}).sort('created_at', -1))
+    return render_template('pending_communities.html', pending=pending)
+
+
+# ---------------------------------------------------------------------------
+# Admin: Approve a pending community
+# Route: POST /admin/communities/<community_id>/approve
+# ---------------------------------------------------------------------------
+@community_bp.route('/admin/communities/<community_id>/approve', methods=['POST'])
+def approve_community(community_id):
+    if 'user_id' not in session or not session.get('is_admin', False):
+        flash('Admin access only.', 'danger')
+        return redirect(url_for('community.communities'))
+
+    db = get_db()
+    db.communities.update_one(
+        {'_id': ObjectId(community_id)},
+        {'$set': {'status': 'active', 'approved_at': datetime.utcnow()}}
+    )
+    flash('Community approved and is now live! ✓', 'success')
+    return redirect(url_for('community.pending_communities'))
+
+
+# ---------------------------------------------------------------------------
+# Admin: Reject a pending community
+# Route: POST /admin/communities/<community_id>/reject
+# ---------------------------------------------------------------------------
+@community_bp.route('/admin/communities/<community_id>/reject', methods=['POST'])
+def reject_community(community_id):
+    if 'user_id' not in session or not session.get('is_admin', False):
+        flash('Admin access only.', 'danger')
+        return redirect(url_for('community.communities'))
+
+    db = get_db()
+    db.communities.delete_one({'_id': ObjectId(community_id)})
+    flash('Community request rejected and removed.', 'info')
+    return redirect(url_for('community.pending_communities'))

@@ -156,7 +156,31 @@ body {
 
 .header-search input::placeholder { color: var(--text-light); }
 
-.search-icon {
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-create {
+  background: var(--accent);
+  color: var(--white);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 11px 22px;
+  border-radius: 50px;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(166,128,184,0.35);
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-create:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}
+
+
   position: absolute;
   right: 16px;
   top: 50%;

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pending Communities – ConnectHer Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/create_community.css') }}">
+  <style>
+    .pending-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    .pending-card {
+      background: var(--white);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.4s ease forwards;
+    }
+    .pending-card:nth-child(1) { animation-delay: 0.05s; }
+    .pending-card:nth-child(2) { animation-delay: 0.10s; }
+    .pending-card:nth-child(3) { animation-delay: 0.15s; }
+
+    .pending-icon {
+      font-size: 36px;
+      width: 60px; height: 60px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pending-img {
+      width: 60px; height: 60px;
+      border-radius: 14px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .pending-info { flex: 1; min-width: 200px; }
+    .pending-name {
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700;
+      color: var(--text-dark); margin-bottom: 4px;
+    }
+    .pending-desc {
+      font-size: 13.5px; color: var(--text-mid);
+      line-height: 1.5; font-weight: 300;
+      margin-bottom: 8px;
+    }
+    .pending-meta {
+      font-size: 12px; color: var(--text-light);
+    }
+    .pending-meta span { margin-right: 14px; }
+
+    .pending-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
+    .btn-approve {
+      background: #4caf50; color: white;
+      border: none; border-radius: 50px;
+      padding: 9px 22px; font-family: var(--font-body);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-approve:hover { background: #388e3c; }
+
+    .btn-reject {
+      background: transparent; color: #c0392b;
+      border: 1.5px solid #e8a09a; border-radius: 50px;
+      padding: 9px 22px; font-family: var(--font-body);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-reject:hover { background: #fce4ec; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 12px; border-radius: 50px;
+      font-size: 11.5px; font-weight: 600;
+    }
+    .badge-pending  { background: #fff3e0; color: #e65100; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/communities">🌸 Communities</a></li>
+      <li class="active"><a href="/admin/communities/pending">⏳ Pending</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-wrap">
+
+      <div class="page-header">
+        <a href="/communities" class="back-link">← Back to Communities</a>
+        <h1>Pending Communities</h1>
+        <p>Review and approve community requests from users.</p>
+      </div>
+
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% if pending %}
+      <div class="pending-grid">
+        {% for community in pending %}
+        <div class="pending-card">
+
+          {% if community.image_url %}
+            <img class="pending-img" src="{{ community.image_url }}" alt="{{ community.name }}"/>
+          {% else %}
+            <div class="pending-icon" style="background: {{ community.color | default('#A680B8') }}22">
+              {{ community.icon | default('🌸') }}
+            </div>
+          {% endif %}
+
+          <div class="pending-info">
+            <div class="pending-name">{{ community.name }}</div>
+            <div class="pending-desc">{{ community.description }}</div>
+            <div class="pending-meta">
+              <span>{{ community.icon | default('🌸') }} Icon</span>
+              <span>Requested by: <strong>{{ community.created_by_name | default('Unknown') }}</strong></span>
+              <span class="status-badge badge-pending">Pending</span>
+            </div>
+          </div>
+
+          <div class="pending-actions">
+            <form method="POST" action="/admin/communities/{{ community._id }}/approve" style="display:inline">
+              <button type="submit" class="btn-approve">✓ Approve</button>
+            </form>
+            <form method="POST" action="/admin/communities/{{ community._id }}/reject" style="display:inline">
+              <button type="submit" class="btn-reject">✕ Reject</button>
+            </form>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="empty-state">
+        <p>🎉 No pending communities right now. All caught up!</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </main>
+</body>
+</html>
