@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectHer - Log In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitcount+Prop+Double+Ink&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div class="login-wrapper">
+        <h1 class="logo-text">ConnectHer</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div id="errorModal" class="modal-overlay">
+                <div class="modal-box">
+                  <div class="modal-icon">
+                    <span>&#10006;</span> 
+                  </div>
+                  <p class="modal-message">{{ message }}</p>
+                  <div class="modal-footer">
+                      <button class="modal-ok-btn" onclick="document.getElementById('errorModal').style.display='none'">OK</button>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="login-card">
+            <form action="/login" method="POST" class="login-form">
+                <input type="email" name="email" placeholder="Email Address" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <p class="forgot-password"><a href="/forgot-password">Forgot Password?</a></p>
+                <button type="submit" class="login-btn">Log in</button>
+            </form>
+            <p class="switch-text">Don't have an account? <a href="/register-page">Sign up</a></p>
+        </div>
+    </div>
+</body>
+</html>

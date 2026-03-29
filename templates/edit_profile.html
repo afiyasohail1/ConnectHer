@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Profile</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+{% if error %}
+    <div class="error-box">
+        {{ error }}
+    </div>
+{% endif %}
+<div class="navbar">
+    <h2>ConnectHer</h2>
+</div>
+
+<div class="container">
+
+    <div class="card" style="max-width:600px; margin:auto;">
+        <h3 style="margin-bottom:15px;">✏️ Edit Profile</h3>
+
+        <form method="POST">
+
+            <label>Name</label><br>
+            <input type="text" name="name" value="{{ user.name }}" required><br><br>
+
+            <label>Department</label><br>
+            <input type="text" name="department" value="{{ user.department }}" required><br><br>
+
+            <label>Interests</label><br>
+            <input type="text" name="interests" value="{{ user.interests }}"><br><br>
+
+            <label>About</label><br>
+            <textarea name="about" rows="4">{{ user.about }}</textarea><br><br>
+
+            <button class="btn btn-primary">Save Changes</button>
+
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

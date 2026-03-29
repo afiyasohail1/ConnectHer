@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - ConnectHer</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <h2>ConnectHer</h2>
+    <input type="text" placeholder="Search...">
+</div>
+
+<div class="container">
+
+    <!-- PROFILE -->
+    <div class="profile-card">
+        <div class="profile-left">
+            <div class="avatar">
+                {{ user.name[0] }}
+            </div>
+
+            <div class="profile-info">
+                <h3>{{ user.name }}</h3>
+                <p>{{ user.department }}</p>
+                <p><small>{{ user.interests }}</small></p>
+            </div>
+        </div>
+
+        <div>
+            <a href="/edit-profile">
+                <button class="btn btn-primary">Edit Profile</button>
+            </a>
+        </div>
+    </div>
+
+    <!-- GRID SECTION -->
+    <div class="grid">
+
+        <!-- ABOUT -->
+        <div class="card">
+            <h4>📌 About</h4>
+            <p>{{ user.about }}</p>
+        </div>
+
+        <!-- LENDING -->
+        <div class="card">
+            <h4>📦 Lending History</h4>
+
+            {% if lending %}
+                {% for item in lending %}
+                    <p>{{ item }}</p>
+                {% endfor %}
+            {% else %}
+                <div class="empty">No lending history</div>
+            {% endif %}
+        </div>
+
+        <!-- COMMUNITY ACTIVITY -->
+        <div class="card stats">
+            <h4>📊 Community Activity</h4>
+            <p>Posts: {{ activity.posts }}</p>
+            <p>Comments: {{ activity.comments }}</p>
+        </div>
+
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="activity">
+        <h4>⚡ Recent Activity</h4>
+
+        {% if recent %}
+            {% for r in recent %}
+                <div class="activity-item">
+                    {{ r }}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">No recent activity</div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+</html>

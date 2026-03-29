@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Public Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<div class="navbar">
+    <h2>ConnectHer</h2>
+</div>
+
+<div class="profile-container">
+
+    <!-- TOP CARD -->
+    <div class="profile-header">
+        <div class="profile-left">
+            <div class="avatar">SK</div>
+            <div>
+                <h2>{{ user.name }}</h2>
+                <p>{{ user.department }}</p>
+
+                <div class="tags">
+                    {% for tag in user.tags %}
+                        <span>{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+            <button class="btn">Send Message</button>
+            <button class="btn-outline">Leave Review</button>
+        </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="grid">
+
+        <!-- ABOUT -->
+        <div class="card">
+            <h3>About</h3>
+            <p>{{ user.about }}</p>
+        </div>
+
+        <!-- POSTS -->
+        <div class="card">
+    <h3>Recent Posts</h3>
+
+    {% for post in posts %}
+        <div class="post">
+            <p class="post-text">{{ post }}</p>
+
+            <div class="post-meta">
+                <span>👍 12</span>
+                <span>💬 3</span>
+                <span>⏱ 2 days ago</span>
+            </div>
+        </div>
+    {% endfor %}
+
+</div>
+
+        <!-- COMMUNITIES -->
+        <div class="card">
+            <h3>Communities</h3>
+            {% for c in communities %}
+                <div class="community-item">{{ c }}</div>
+            {% endfor %}
+        </div>
+
+        <!-- REVIEWS -->
+        <div class="card">
+    <div class="review-header">
+        <h3>Ratings & Reviews</h3>
+        <span class="rating">⭐ 4.8 (3 reviews)</span>
+    </div>
+
+    {% for r in reviews %}
+        <div class="review">
+            <div class="review-top">
+                <strong>User</strong>
+                <span class="stars">⭐⭐⭐⭐⭐</span>
+            </div>
+            <p class="review-text">{{ r }}</p>
+        </div>
+    {% endfor %}
+
+</div>  
+
+    </div>
+
+</div>
+
+</body>
+</html>
