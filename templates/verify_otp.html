@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectHer - Log In</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitcount+Prop+Double+Ink&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div class="login-wrapper">
+        <h1 class="logo-text">ConnectHer</h1>
+        
+        <div class="login-card">
+            <p style="color: #5C4A6E; margin-bottom: 20px;">An OTP has been sent to your HU Email.</p>
+            <form action="/verify-otp" method="POST" class="login-form">
+                <input type="text" name="otp" placeholder="Enter 6-digit OTP" required maxlength="6">
+                <button type="submit" class="login-btn">Verify OTP</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

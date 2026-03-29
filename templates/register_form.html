@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectHer - Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitcount+Prop+Double+Ink&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <div class="login-wrapper">
+        <h1 class="logo-text">ConnectHer</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div id="statusModal" class="modal-overlay">
+                <div class="modal-box">
+                  <div class="modal-icon {{ 'icon-success' if category == 'success' else 'icon-error' }}">
+                    {% if category == 'success' %}
+                      <span>&#10004;</span> {% else %}
+                      <span>&#10006;</span> {% endif %}
+                  </div>
+                  <p class="modal-message">{{ message }}</p>
+                  <div class="modal-footer">
+                      {% if category == 'success' %}
+                        <a href="/login" class="modal-ok-btn" style="text-decoration: none;">Continue</a>
+                      {% else %}
+                        <button class="modal-ok-btn" onclick="document.getElementById('statusModal').style.display='none'">OK</button>
+                      {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <div class="login-card">
+            <form action="/register" method="POST" class="login-form">
+                <input type="email" name="email" placeholder="HU Email Address" required>
+                <input type="text" name="cnic" placeholder="CNIC Number (13 digits)" required>
+                <input type="password" name="password" placeholder="Create Password" required>
+                <button type="submit" class="login-btn">Sign up</button>
+            </form>
+            <p class="switch-text">Already have an account? <a href="/login">Log in</a></p>
+        </div>
+    </div>
+</body>
+</html>
