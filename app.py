@@ -200,5 +200,128 @@ def seed_data():
     ])
     return 'Communities added! <a href="/communities">Go to Communities</a>'
 
+# DASHBOARD
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' not in session:
+        return redirect('/fake-login')
+    if 'user' in session:
+        user = session['user']
+    else:
+        user = {
+            "name": "Sara Ali",
+            "department": "Computer Science",
+            "interests": "Coding, Reading",
+            "about": "Passionate student who loves tech and communities"
+        }
+
+    lending = [
+        "Borrowed: Data Structures Book",
+        "Returned: Calculator"
+    ]
+
+    activity = {
+        "posts": 5,
+        "comments": 12
+    }
+
+    recent = [
+        "Posted in Study Group",
+        "Commented on a post",
+        "Joined Tech Community"
+    ]
+
+    return render_template(
+        'dashboard.html',
+        user=user,
+        lending=lending,
+        activity=activity,
+        recent=recent
+    )
+
+@app.route('/edit-profile', methods=['GET', 'POST'])
+def edit_profile():
+    if 'user_id' not in session:
+        return redirect('/fake-login')
+    if 'user' in session:
+        user = session['user']
+    else:
+        user = {
+            "name": "Sara Ali",
+            "department": "Computer Science",
+            "interests": "Coding, Reading",
+            "about": "Passionate student who loves tech and communities"
+        }
+
+    if request.method == 'POST':
+
+        name = request.form['name']
+        department = request.form['department']
+        interests = request.form['interests']
+        about = request.form['about']
+
+        # VALIDATION
+        if not name or not department:
+            error = "Name and Department are required!"
+            return render_template('edit_profile.html', user=user, error=error)
+
+        # SAVE
+        user = {
+            "name": name,
+            "department": department,
+            "interests": interests,
+            "about": about
+        }
+
+        session['user'] = user
+
+        return redirect('/dashboard')
+
+    return render_template('edit_profile.html', user=user)
+
+@app.route('/public-profile')
+def public_profile():
+
+    user = {
+        "name": "Sarah Khalid",
+        "department": "Computer Science",
+        "tags": ["AI", "Entrepreneurship", "Design"],
+        "about": "Passionate about building innovative solutions and connecting with fellow students.",
+    }
+
+    posts = [
+        "Just finished building my first ML model!",
+        "Anyone interested in joining a study group?",
+        "Sharing some resources on sustainable design practices."
+    ]
+
+    communities = [
+        "AI & Machine Learning",
+        "Startup Enthusiasts",
+        "Women in Tech",
+        "Sustainable Living"
+    ]
+
+    reviews = [
+        "Super reliable! Highly recommend.",
+        "Very helpful and responsive.",
+        "Great person to connect with."
+    ]
+
+    return render_template(
+        'public_profile.html',
+        user=user,
+        posts=posts,
+        communities=communities,
+        reviews=reviews
+    )
+
+# fake login
+@app.route('/fake-login')
+def fake_login():
+    session['user_id'] = 'test_user'
+    return redirect('/dashboard')
+
+
 if __name__ == '__main__':
     app.run(debug=True)
