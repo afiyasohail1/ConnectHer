@@ -88,7 +88,8 @@ def create_post(community_id):
         return redirect(url_for('fake_login'))
     db = get_db()
     user_id = session['user_id']
-    username = session.get('username', 'Anonymous')
+    user = db.users.find_one({'_id': ObjectId(user_id)})
+    username = session.get('username') or (user.get('username') if user else 'Anonymous') or 'Anonymous'
     content = request.form.get('content', '').strip()
     image_url = None
     if not content:
@@ -180,7 +181,8 @@ def comment_post(post_id):
         return redirect(url_for('fake_login'))
     db = get_db()
     user_id = session['user_id']
-    username = session.get('username', 'Anonymous')
+    user = db.users.find_one({'_id': ObjectId(user_id)})
+    username = session.get('username') or (user.get('username') if user else 'Anonymous') or 'Anonymous'
     comment_text = request.form.get('comment_text', '').strip()
     post = db.posts.find_one({'_id': ObjectId(post_id)})
     if not post:

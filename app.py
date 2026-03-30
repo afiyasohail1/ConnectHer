@@ -10,24 +10,20 @@ app = Flask(__name__)
 app.secret_key = 'connecther-secret-key'
 
 # MongoDB connection
-app.config["MONGO_URI"] = "mongodb://localhost:27017/connecther"
+#app.config["MONGO_URI"] = "mongodb://localhost:27017/connecther"
+app.config["MONGO_URI"] = "mongodb+srv://admin:connect123@cluster0.eg0o1rm.mongodb.net/connecther?retryWrites=true&w=majority&appName=Cluster0"
 mongo = PyMongo(app)
 
 # Register your blueprint
 app.register_blueprint(community_bp)
 
-@app.route('/fake-login')
-def fake_login():
-    from flask import session
-    session['user_id'] = 'test_user_123'
-    session['username'] = 'Afiya'
-    return 'Logged in! Now go to <a href="/communities">/communities</a>'
+
 # Configure Flask-Mail (Use your HU email password)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your-username0@gmail.com'
-app.config['MAIL_PASSWORD'] = 'your-app-password'
+app.config['MAIL_USERNAME'] = 'nigarishnavaid0@gmail.com'
+app.config['MAIL_PASSWORD'] = 'vlkm jrgj urgu mjlb'
 mail = Mail(app)
 
 @app.route('/')
