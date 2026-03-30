@@ -22,8 +22,8 @@ app.register_blueprint(community_bp)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'nigarishnavaid0@gmail.com'
-app.config['MAIL_PASSWORD'] = 'vlkm jrgj urgu mjlb'
+app.config['MAIL_USERNAME'] = 'username@gmail.com'
+app.config['MAIL_PASSWORD'] = 'password'
 mail = Mail(app)
 
 @app.route('/')
