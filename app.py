@@ -22,8 +22,8 @@ app.register_blueprint(community_bp)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'user@gmail.com'
-app.config['MAIL_PASSWORD'] = 'password'
+app.config['MAIL_USERNAME'] = 'nigarishnavaid0@gmail.com'
+app.config['MAIL_PASSWORD'] = 'vlkm jrgj urgu mjlb'
 mail = Mail(app)
 
 @app.route('/')
@@ -123,10 +123,12 @@ def verify_otp():
 
         if temp_user and user_otp == temp_user['otp']:
             # OTP MATCHES - Finally add to MongoDB
+            default_username = temp_user['email'].split('@')[0].replace('.', ' ').title()
             mongo.db.users.insert_one({
                 'email': temp_user['email'],
                 'cnic': temp_user['cnic'],
                 'password': temp_user['password'],
+                'username': default_username, # Add this field!
                 'status': 'approved'
             })
             session.pop('temp_user', None) # Clear temp data
