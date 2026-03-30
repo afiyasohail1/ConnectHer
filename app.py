@@ -58,7 +58,7 @@ def login():
 
         # If all checks pass:
         session['user_id'] = str(user['_id'])
-        return redirect(url_for('community.communities'))
+        return redirect('/dashboard')
 
     return render_template('login.html')
 
@@ -325,6 +325,15 @@ def fake_login():
     session['user_id'] = 'test_user'
     return redirect('/dashboard')
 
+# test user
+# @app.route('/create-test-user')
+# def create_test_user():
+#     mongo.db.users.insert_one({
+#         "email": "su09281@st.habib.edu.pk",
+#         "password": "lala",
+#         "status": "approved"
+#     })
+#     return "Test user created!"
 
 if __name__ == '__main__':
     app.run(debug=True)
