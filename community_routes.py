@@ -265,9 +265,8 @@ def create_community():
             image_file.save(os.path.join(upload_folder, filename))
             image_url = f"/static/uploads/{filename}"
 
-        # Status depends on who is creating
-        status ='pending'
-        
+        # Auto-approve community creation for now
+        status = 'active'
 
         db.communities.insert_one({
             'name':            name,
@@ -279,10 +278,11 @@ def create_community():
             'created_by':      user_id,
             'created_by_name': session.get('username', 'Unknown'),
             'created_at':      datetime.utcnow(),
+            'approved_at':     datetime.utcnow(),
             'member_count':    0
         })
 
-        flash(f'Your community "{name}" has been submitted for admin approval! 🌸', 'success')
+        flash(f'Your community "{name}" has been created and is now live! 🌸', 'success')
         return redirect(url_for('community.communities'))
 
     return render_template('create_community.html', is_admin=False)
