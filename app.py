@@ -43,23 +43,28 @@ def login():
 
         user = mongo.db.users.find_one({'email': email})
 
-        if not user:
-            flash('User is not registered', 'error')
-            return redirect(url_for('login'))
-
-        if user['password'] != password:
+        if not user or user['password'] != password:
             flash('Incorrect Password or Email', 'error')
             return redirect(url_for('login'))
 
-        # Check if the user is approved
         if user.get('status') != 'approved':
             flash('Your account is still pending admin approval.', 'error')
             return redirect(url_for('login'))
 
-        # If all checks pass:
+        # --- FIX STARTS HERE ---
         session['user_id'] = str(user['_id'])
-        return redirect('/dashboard')
+        
+        # Store the user's actual data in the session
+        session['user'] = {
+            "name": user.get('username', 'New User'),
+            "department": user.get('department', 'Not Set'),
+            "interests": user.get('interests', 'None'),
+            "about": user.get('about', '')
+        }
+        # --- FIX ENDS HERE ---
 
+        #return redirect(url_for('dashboard')) # Redirect to dashboard instead of communities to see the change
+        return redirect(url_for('community.communities'))
     return render_template('login.html')
 
 @app.route('/register', methods=['POST'])
@@ -203,84 +208,85 @@ def seed_data():
     ])
     return 'Communities added! <a href="/communities">Go to Communities</a>'
 
-# DASHBOARD
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
-        return redirect('/fake-login')
-    if 'user' in session:
-        user = session['user']
-    else:
-        user = {
-            "name": "Sara Ali",
-            "department": "Computer Science",
-            "interests": "Coding, Reading",
-            "about": "Passionate student who loves tech and communities"
-        }
+        return redirect(url_for('login'))
 
-    lending = [
-        "Borrowed: Data Structures Book",
-        "Returned: Calculator"
-    ]
+    from bson.objectid import ObjectId
+    db = mongo.db
+    user_id = session['user_id']
 
-    activity = {
-        "posts": 5,
-        "comments": 12
+    # 1. FETCH ACTUAL USER DATA FROM DB
+    # This replaces the hardcoded "Sara Ali" dictionary
+    user_data = db.users.find_one({'_id': ObjectId(user_id)})
+
+    if not user_data:
+        flash("User not found", "error")
+        return redirect(url_for('logout'))
+
+    # Prepare user dict for template (defaults to "Not Set" if empty)
+    user = {
+        "name": user_data.get('username', 'New Member'),
+        "department": user_data.get('department', 'Not Set Yet'),
+        "interests": user_data.get('interests', 'None listed'),
+        "about": user_data.get('about', 'Tell us about yourself!')
     }
 
-    recent = [
-        "Posted in Study Group",
-        "Commented on a post",
-        "Joined Tech Community"
-    ]
+    # 2. DYNAMIC ACTIVITY (Count actual posts/comments from DB)
+    # This is no longer hardcoded to 5 and 12
+    post_count = db.posts.count_documents({'author_id': user_id})
+    comment_count = db.posts.count_documents({'comments.author_id': user_id})
+
+    activity = {
+        "posts": post_count,
+        "comments": comment_count
+    }
+
+    # 3. LENDING & RECENT (Keep empty for now as per your request)
+    lending = [] 
+    recent = []
 
     return render_template(
         'dashboard.html',
         user=user,
-        lending=lending,
         activity=activity,
+        lending=lending,
         recent=recent
     )
-
 @app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():
     if 'user_id' not in session:
-        return redirect('/fake-login')
-    if 'user' in session:
-        user = session['user']
-    else:
-        user = {
-            "name": "Sara Ali",
-            "department": "Computer Science",
-            "interests": "Coding, Reading",
-            "about": "Passionate student who loves tech and communities"
-        }
+        return redirect(url_for('login'))
+
+    from bson.objectid import ObjectId
+    db = mongo.db
+    user_id = session['user_id']
 
     if request.method == 'POST':
+        # Get data from the HTML form
+        name = request.form.get('name')
+        dept = request.form.get('department')
+        interests = request.form.get('interests')
+        about = request.form.get('about')
 
-        name = request.form['name']
-        department = request.form['department']
-        interests = request.form['interests']
-        about = request.form['about']
+        # Update the specific user document in MongoDB
+        db.users.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$set': {
+                'username': name,
+                'department': dept,
+                'interests': interests,
+                'about': about
+            }}
+        )
 
-        # VALIDATION
-        if not name or not department:
-            error = "Name and Department are required!"
-            return render_template('edit_profile.html', user=user, error=error)
+        flash("Profile updated successfully!", "success")
+        return redirect(url_for('dashboard'))
 
-        # SAVE
-        user = {
-            "name": name,
-            "department": department,
-            "interests": interests,
-            "about": about
-        }
-
-        session['user'] = user
-
-        return redirect('/dashboard')
-
-    return render_template('edit_profile.html', user=user)
+    # GET: Fetch current data to pre-fill the edit form
+    user_data = db.users.find_one({'_id': ObjectId(user_id)})
+    return render_template('edit_profile.html', user=user_data)
 
 @app.route('/public-profile')
 def public_profile():
@@ -325,15 +331,6 @@ def fake_login():
     session['user_id'] = 'test_user'
     return redirect('/dashboard')
 
-# test user
-# @app.route('/create-test-user')
-# def create_test_user():
-#     mongo.db.users.insert_one({
-#         "email": "su09281@st.habib.edu.pk",
-#         "password": "lala",
-#         "status": "approved"
-#     })
-#     return "Test user created!"
 
 if __name__ == '__main__':
     app.run(debug=True)
