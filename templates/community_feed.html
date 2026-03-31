@@ -86,7 +86,7 @@
             <div class="post-avatar">{{ post.author_name[0] | upper if post.author_name else '?' }}</div>
             <div class="post-meta">
               <span class="post-author">{{ post.author_name | default('Anonymous') }}</span>
-              <span class="post-time">{{ post.created_at.strftime('%b %d, %Y · %I:%M %p') if post.created_at else '' }}</span>
+              <span class="post-time" data-utc-time="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') if post.created_at else '' }}">{{ post.created_at.strftime('%b %d, %Y · %I:%M %p') if post.created_at else '' }}</span>
             </div>
             <!-- Edit/Delete if own post -->
             {% if post.author_id == session_user_id %}

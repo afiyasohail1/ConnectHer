@@ -1,3 +1,23 @@
+// Convert UTC post times to local time in the browser
+function convertPostTimesToLocal() {
+  document.querySelectorAll('.post-time[data-utc-time]').forEach(el => {
+    const utcTime = el.dataset.utcTime;
+    if (!utcTime) return;
+    const date = new Date(utcTime);
+    if (isNaN(date)) return;
+    el.textContent = date.toLocaleString(undefined, {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  });
+}
+
+window.addEventListener('DOMContentLoaded', convertPostTimesToLocal);
+
 // Toggle comment section open/close
 function toggleComments(id) {
   const section = document.getElementById(id);
