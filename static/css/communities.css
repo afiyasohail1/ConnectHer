@@ -181,14 +181,6 @@ body {
 }
 
 
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 15px;
-  pointer-events: none;
-}
-
 /* ===== Flash Messages ===== */
 .flash {
   padding: 13px 20px;

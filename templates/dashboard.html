@@ -4,19 +4,154 @@
     <meta charset="UTF-8">
     <title>Dashboard - ConnectHer</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background: #F5E5FF;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: #A680B8; /* soft purple */
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* LOGO */
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-links li {
+            margin-bottom: 10px;
+        }
+
+        .nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    text-decoration: none;
+    color: #f2e9f7;
+    font-size: 16px;
+    font-weight: 500;
+
+    padding: 12px 10px;
+    border-radius: 12px;
+
+    transition: all 0.3s ease;
+}
+        .nav-links a:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: 240px;
+            padding: 30px;
+        }
+
+        /* PROFILE CARD */
+        .profile-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f5f0fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .profile-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            background: #b18acb;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* GRID */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        /* CARD */
+        .card {
+            background: #f5f0fa;
+            padding: 20px;
+            border-radius: 15px;
+            min-height: 120px;
+        }
+
+        .full-width {
+            margin-top: 20px;
+        }
+
+        .empty {
+            color: gray;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background: #b18acb;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+        }
+
+    </style>
 </head>
 
 <body>
 
-<!-- NAVBAR -->
-<div class="navbar">
-    <h2>ConnectHer</h2>
-    <input type="text" placeholder="Search...">
-</div>
+<!-- SIDEBAR -->
+<nav class="sidebar">
+    <div class="sidebar-logo">✦ ConnectHer</div>
 
-<div class="container">
+    <ul class="nav-links">
+        <li><a href="/home">🏠 Home</a></li>
+        <li><a href="/communities">🌸 Communities</a></li>
+        <li><a href="/items">🛍️ Items</a></li>
+        <li><a href="/dashboard">👤 Profile</a></li>
+        <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
 
     <!-- PROFILE -->
     <div class="profile-card">
@@ -25,22 +160,20 @@
                 {{ user.name[0] }}
             </div>
 
-            <div class="profile-info">
+            <div>
                 <h3>{{ user.name }}</h3>
                 <p>{{ user.department }}</p>
                 <p><small>{{ user.interests }}</small></p>
             </div>
         </div>
 
-        <div>
-            <a href="/edit-profile">
-                <button class="btn btn-primary">Edit Profile</button>
-            </a>
-        </div>
+        <a href="/edit-profile">
+            <button class="btn-primary">Edit Profile</button>
+        </a>
     </div>
 
-    <!-- GRID SECTION -->
-    <div class="grid">
+    <!-- GRID -->
+    <div class="dashboard-grid">
 
         <!-- ABOUT -->
         <div class="card">
@@ -62,7 +195,7 @@
         </div>
 
         <!-- COMMUNITY ACTIVITY -->
-        <div class="card stats">
+        <div class="card">
             <h4>📊 Community Activity</h4>
             <p>Posts: {{ activity.posts }}</p>
             <p>Comments: {{ activity.comments }}</p>
@@ -71,22 +204,19 @@
     </div>
 
     <!-- RECENT ACTIVITY -->
-    <div class="activity">
+    <div class="card full-width">
         <h4>⚡ Recent Activity</h4>
 
         {% if recent %}
             {% for r in recent %}
-                <div class="activity-item">
-                    {{ r }}
-                </div>
+                <div>{{ r }}</div>
             {% endfor %}
         {% else %}
             <div class="empty">No recent activity</div>
         {% endif %}
-
     </div>
 
 </div>
 
 </body>
-</html>
+</html> 

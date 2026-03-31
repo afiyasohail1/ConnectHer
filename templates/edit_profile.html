@@ -6,22 +6,89 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+<style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #F5E5FF;
+        }
 
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            background: #A680B8; /* soft purple */
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* LOGO */
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-links li {
+            margin-bottom: 10px;
+        }
+
+        .nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    text-decoration: none;
+    font-weight: bold;
+    color: #f2e9f7;
+    font-size: 16px;
+    font-weight: 500;
+
+    padding: 12px 10px;
+    border-radius: 12px;
+
+    transition: all 0.3s ease;
+}
+        .nav-links a:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+    </style>
 <body>
 {% if error %}
     <div class="error-box">
         {{ error }}
     </div>
 {% endif %}
-<div class="navbar">
-    <h2>ConnectHer</h2>
-</div>
+<nav class="sidebar">
+    <div class="sidebar-logo">✦ ConnectHer</div>
+
+    <ul class="nav-links">
+        <li><a href="/home">🏠 Home</a></li>
+        <li><a href="/communities">🌸 Communities</a></li>
+        <li><a href="/items">🛍️ Items</a></li>
+        <li><a href="/dashboard">👤 Profile</a></li>
+        <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+</nav>
 
 <div class="container">
 
-    <div class="card" style="max-width:600px; margin:auto;">
-        <h3 style="margin-bottom:15px;">✏️ Edit Profile</h3>
-
+    <div class="card" style="max-width:600px; margin:auto; margin-top: 100px; margin-right: 450px;">
+        <h3 style="margin-bottom:10px;">✏️ Edit Profile</h3>
+        <div class="card-header">
+            <a href="/dashboard" class="back-link">← Return to Dashboard</a>
+        </div>
         <form method="POST">
 
             <label>Name</label><br>

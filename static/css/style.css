@@ -370,3 +370,25 @@ input:focus, textarea:focus {
     font-size: 14px;
     color: #333;
 }
+/* HEADER FLEX */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* BACK LINK */
+.back-link {
+    text-decoration: none;
+    font-size: 14px;
+    color: #8b5fa0;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+/* HOVER EFFECT */
+.back-link:hover {
+    text-decoration: underline;
+    color: #6f4a85;
+}
