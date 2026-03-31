@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Home – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/community_feed.css') }}">
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li class="active"><a href="/home">🏠 Home</a></li>
+      <li><a href="/communities">🌸 Communities</a></li>
+      <li><a href="/items">🛍️ Items</a></li>
+      <li><a href="/dashboard">👤 Profile</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="community-banner">
+      <div class="banner-icon">🏠</div>
+      <div class="banner-info">
+        <h1>Home Feed</h1>
+        <p>Recent posts from communities you joined.</p>
+      </div>
+    </div>
+
+    <div class="posts-feed" id="postsFeed">
+      {% if posts and posts|length > 0 %}
+        {% for post in posts %}
+          <article class="post-card" id="post-{{ post._id }}">
+            <div class="post-header">
+              <div class="post-avatar">{{ post.author_name[0] | upper if post.author_name else '?' }}</div>
+              <div class="post-meta">
+                <span class="post-author">{{ post.author_name | default('Anonymous') }}</span>
+                <span class="post-community">in {{ post.community_name }}</span>
+                <span class="post-time" data-utc-time="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') if post.created_at else ''}}">{{ post.created_at.strftime('%b %d, %Y · %I:%M %p') if post.created_at else '' }}</span>
+              </div>
+            </div>
+            <div class="post-content">
+              <p>{{ post.content }}</p>
+              {% if post.image_url %}
+              <div class="post-image">
+                <img src="{{ post.image_url }}" alt="Post image"/>
+              </div>
+              {% endif %}
+            </div>
+            <div class="post-actions">
+              <form method="POST" action="/posts/{{ post._id }}/like" style="display:inline">
+                <button type="submit" class="action-btn like-btn {% if session_user_id in post.liked_by %}liked{% endif %}">
+                  {% if session_user_id in post.liked_by %}💜{% else %}🤍{% endif %}
+                  <span>{{ post.likes | default(0) }}</span>
+                </button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="empty-feed">No recent posts yet from your communities. Join some communities to see activity here.</p>
+      {% endif %}
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/community_feed.js') }}"></script>
+</body>
+</html>

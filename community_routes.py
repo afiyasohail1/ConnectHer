@@ -81,6 +81,30 @@ def community_feed(community_id):
                            member_count=member_count, session_user_id=user_id,
                            session_username=session.get('username', 'You'))
 
+@community_bp.route('/home')
+def home():
+    if 'user_id' not in session:
+        flash('Please log in first.', 'danger')
+        return redirect(url_for('fake_login'))
+
+    db = get_db()
+    user_id = session['user_id']
+
+    # Get all communities the user has joined
+    joined = db.memberships.find({'user_id': user_id})
+    joined_ids = [m['community_id'] for m in joined]
+
+    # Fetch recent posts from those communities
+    posts = list(db.posts.find({'community_id': {'$in': joined_ids}}).sort('created_at', -1))
+
+    # Add community name into each post for display
+    community_names = {c['_id']: c['name'] for c in db.communities.find({'_id': {'$in': joined_ids}})}
+    for post in posts:
+        post['community_name'] = community_names.get(post['community_id'], 'Community')
+
+    return render_template('home.html', posts=posts, session_user_id=user_id,
+                           session_username=session.get('username', 'You'))
+
 @community_bp.route('/communities/<community_id>/post', methods=['POST'])
 def create_post(community_id):
     if 'user_id' not in session:

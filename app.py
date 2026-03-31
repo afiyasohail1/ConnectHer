@@ -22,8 +22,8 @@ app.register_blueprint(community_bp)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'username@gmail.com'
-app.config['MAIL_PASSWORD'] = 'password'
+app.config['MAIL_USERNAME'] = 'connecther67@gmail.com'
+app.config['MAIL_PASSWORD'] = 'pobs cfif hmbw effd'
 mail = Mail(app)
 
 @app.route('/')
@@ -51,7 +51,6 @@ def login():
             flash('Your account is still pending admin approval.', 'error')
             return redirect(url_for('login'))
 
-        # --- FIX STARTS HERE ---
         session['user_id'] = str(user['_id'])
         
         # Store the user's actual data in the session
