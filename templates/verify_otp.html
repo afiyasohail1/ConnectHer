@@ -10,6 +10,23 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div id="statusModal" class="modal-overlay" style="display: flex; position: fixed; z-index: 9999; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; top: 0; left: 0;">
+            <div class="modal-box" style="background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; width: 90%;">
+            <div class="modal-icon {{ 'icon-error' if category == 'error' else 'icon-success' }}" style="font-size: 50px; margin-bottom: 20px;">
+                {% if category == 'error' %}
+                <span style="color: #ffffff;">&#10006;</span> {% else %}
+                <span style="color: #2ecc71;">&#10004;</span> {% endif %}
+            </div>
+            <p class="modal-message" style="font-size: 18px; color: #333; margin-bottom: 20px;">{{ message }}</p>
+            <button class="modal-ok-btn" onclick="document.getElementById('statusModal').style.display='none'" style="background: #8B5FA0; color: white; border: none; padding: 10px 30px; border-radius: 5px; cursor: pointer;">OK</button>
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
     <div class="login-wrapper">
         <h1 class="logo-text">ConnectHer</h1>
         

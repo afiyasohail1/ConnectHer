@@ -10,6 +10,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
+    <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; color: #5C4A6E; font-family: sans-serif; font-weight: bold;">Connecting to ConnectHer...</p>
+    </div>
+    <style>
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #8B5FA0; /* Your Brand Purple */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
     <div class="login-wrapper">
         <h1 class="logo-text">ConnectHer</h1>
 
@@ -38,13 +56,27 @@
         {% endwith %}
         <div class="login-card">
             <form action="/register" method="POST" class="login-form">
+                <input type="text" name="full_name" placeholder="Full Name" required>
                 <input type="email" name="email" placeholder="HU Email Address" required>
-                <input type="text" name="cnic" placeholder="CNIC Number (13 digits)" required>
                 <input type="password" name="password" placeholder="Create Password" required>
                 <button type="submit" class="login-btn">Sign up</button>
             </form>
             <p class="switch-text">Already have an account? <a href="/login">Log in</a></p>
         </div>
     </div>
+    <script>
+        document.querySelector('form').onsubmit = function() {
+            // Show the purple loader
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            // Change button text for extra feedback
+            const btn = document.querySelector('.login-btn');
+            if (btn) {
+                btn.innerHTML = "Sending OTP...";
+                btn.disabled = true;
+                btn.style.opacity = "0.7";
+            }
+        };
+    </script>
 </body>
 </html>
