@@ -9,6 +9,14 @@ def get_db():
     from app import mongo
     return mongo.db
 
+def get_redirect_destination(post):
+    """Check referrer to determine if redirect to home or community feed"""
+    referrer = request.referrer or ''
+    if '/home' in referrer:
+        return url_for('community.home')
+    else:
+        return url_for('community.community_feed', community_id=str(post['community_id']))
+
 @community_bp.route('/communities')
 def communities():
     if 'user_id' not in session:
@@ -150,7 +158,7 @@ def edit_post(post_id):
         return redirect(url_for('community.communities'))
     if post['author_id'] != user_id:
         flash('You can only edit your own posts.', 'danger')
-        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+        return redirect(get_redirect_destination(post))
     if request.method == 'POST':
         new_content = request.form.get('content', '').strip()
         if not new_content:
@@ -158,7 +166,7 @@ def edit_post(post_id):
         else:
             db.posts.update_one({'_id': ObjectId(post_id)}, {'$set': {'content': new_content, 'edited_at': datetime.utcnow()}})
             flash('Post updated! ✏️', 'success')
-        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+        return redirect(get_redirect_destination(post))
     return render_template('edit_post.html', post=post)
 
 @community_bp.route('/posts/<post_id>/delete', methods=['POST'])
@@ -174,11 +182,10 @@ def delete_post(post_id):
         return redirect(url_for('community.communities'))
     if post['author_id'] != user_id:
         flash('You can only delete your own posts.', 'danger')
-        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
-    community_id = str(post['community_id'])
+        return redirect(get_redirect_destination(post))
     db.posts.delete_one({'_id': ObjectId(post_id)})
     flash('Post deleted.', 'info')
-    return redirect(url_for('community.community_feed', community_id=community_id))
+    return redirect(get_redirect_destination(post))
 
 @community_bp.route('/posts/<post_id>/like', methods=['POST'])
 def like_post(post_id):
@@ -196,7 +203,7 @@ def like_post(post_id):
         db.posts.update_one({'_id': ObjectId(post_id)}, {'$pull': {'liked_by': user_id}, '$inc': {'likes': -1}})
     else:
         db.posts.update_one({'_id': ObjectId(post_id)}, {'$push': {'liked_by': user_id}, '$inc': {'likes': 1}})
-    return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+    return redirect(get_redirect_destination(post))
 
 @community_bp.route('/posts/<post_id>/comment', methods=['POST'])
 def comment_post(post_id):
@@ -214,10 +221,10 @@ def comment_post(post_id):
         return redirect(url_for('community.communities'))
     if not comment_text:
         flash('Comment cannot be empty.', 'danger')
-        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+        return redirect(get_redirect_destination(post))
     comment = {'author_id': user_id, 'author_name': username, 'text': comment_text, 'created_at': datetime.utcnow()}
     db.posts.update_one({'_id': ObjectId(post_id)}, {'$push': {'comments': comment}})
-    return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+    return redirect(get_redirect_destination(post))
 
 @community_bp.route('/posts/<post_id>/report', methods=['POST'])
 def report_post(post_id):
@@ -233,12 +240,12 @@ def report_post(post_id):
     existing_report = db.reports.find_one({'post_id': ObjectId(post_id), 'reported_by': user_id})
     if existing_report:
         flash('You have already reported this post.', 'info')
-        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+        return redirect(get_redirect_destination(post))
     db.reports.insert_one({'post_id': ObjectId(post_id), 'reported_by': user_id,
                            'community_id': post['community_id'], 'reason': 'Reported by user',
                            'status': 'pending', 'created_at': datetime.utcnow()})
     flash('Post reported. Our admin will review it. 🚩', 'info')
-    return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+    return redirect(get_redirect_destination(post))
 
 
 # ---------------------------------------------------------------------------

@@ -38,6 +38,8 @@
       {% if posts and posts|length > 0 %}
         {% for post in posts %}
           <article class="post-card" id="post-{{ post._id }}">
+
+            <!-- Post Header -->
             <div class="post-header">
               <div class="post-avatar">{{ post.author_name[0] | upper if post.author_name else '?' }}</div>
               <div class="post-meta">
@@ -45,7 +47,21 @@
                 <span class="post-community">in {{ post.community_name }}</span>
                 <span class="post-time" data-utc-time="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') if post.created_at else ''}}">{{ post.created_at.strftime('%b %d, %Y · %I:%M %p') if post.created_at else '' }}</span>
               </div>
+              <!-- Edit/Delete if own post -->
+              {% if post.author_id == session_user_id %}
+              <div class="post-menu">
+                <button class="menu-btn" onclick="toggleMenu('menu-{{ post._id }}')">⋯</button>
+                <div class="dropdown-menu" id="menu-{{ post._id }}">
+                  <a href="/posts/{{ post._id }}/edit">✏️ Edit</a>
+                  <form method="POST" action="/posts/{{ post._id }}/delete">
+                    <button type="submit" class="dropdown-delete">🗑️ Delete</button>
+                  </form>
+                </div>
+              </div>
+              {% endif %}
             </div>
+
+            <!-- Post Content -->
             <div class="post-content">
               <p>{{ post.content }}</p>
               {% if post.image_url %}
@@ -54,14 +70,49 @@
               </div>
               {% endif %}
             </div>
+
+            <!-- Post Actions -->
             <div class="post-actions">
+              <!-- Like -->
               <form method="POST" action="/posts/{{ post._id }}/like" style="display:inline">
                 <button type="submit" class="action-btn like-btn {% if session_user_id in post.liked_by %}liked{% endif %}">
                   {% if session_user_id in post.liked_by %}💜{% else %}🤍{% endif %}
                   <span>{{ post.likes | default(0) }}</span>
                 </button>
               </form>
+
+              <!-- Comment toggle -->
+              <button class="action-btn" onclick="toggleComments('comments-{{ post._id }}')">
+                💬 <span>{{ post.comments | length if post.comments else 0 }}</span>
+              </button>
+
+              <!-- Report -->
+              {% if post.author_id != session_user_id %}
+              <form method="POST" action="/posts/{{ post._id }}/report" style="display:inline; margin-left:auto">
+                <button type="submit" class="action-btn report-btn" title="Report post">🚩 Report</button>
+              </form>
+              {% endif %}
             </div>
+
+            <!-- Comments Section -->
+            <div class="comments-section" id="comments-{{ post._id }}" style="display:none">
+              {% for comment in post.comments %}
+              <div class="comment">
+                <div class="comment-avatar">{{ comment.author_name[0] | upper if comment.author_name else '?' }}</div>
+                <div class="comment-body">
+                  <span class="comment-author">{{ comment.author_name }}</span>
+                  <p class="comment-text">{{ comment.text }}</p>
+                </div>
+              </div>
+              {% endfor %}
+
+              <!-- Add Comment -->
+              <form method="POST" action="/posts/{{ post._id }}/comment" class="comment-form">
+                <input type="text" name="comment_text" placeholder="Write a comment…" required maxlength="300"/>
+                <button type="submit" class="btn-comment">Send</button>
+              </form>
+            </div>
+
           </article>
         {% endfor %}
       {% else %}
