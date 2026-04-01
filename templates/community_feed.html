@@ -91,13 +91,6 @@
               </span>
             </div>
 
-            <!-- Admin: Remove user from community -->
-            {% if session.get('is_admin') and post.author_id != session_user_id %}
-            <form method="POST" action="/admin/communities/{{ community._id }}/remove-user/{{ post.author_id }}" style="display:inline">
-              <button type="submit" class="btn-remove-user" onclick="return confirm('Remove this user from the community?')">👤✕</button>
-            </form>
-            {% endif %}
-
             <!-- Post menu (edit/delete for owner, admin remove for admin) -->
             <div class="post-menu">
               <button class="menu-btn" onclick="toggleMenu('menu-{{ post._id }}')">⋯</button>
@@ -111,12 +104,6 @@
                 </form>
                 {% endif %}
 
-                <!-- Admin: delete any post -->
-                {% if session.get('is_admin') and post.author_id != session_user_id %}
-                <form method="POST" action="/admin/posts/{{ post._id }}/delete">
-                  <button type="submit" class="dropdown-delete">🛡️ Admin Remove</button>
-                </form>
-                {% endif %}
 
               </div>
             </div>
