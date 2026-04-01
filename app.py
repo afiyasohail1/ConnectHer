@@ -3,6 +3,7 @@ from flask_pymongo import PyMongo
 from community_routes import community_bp
 import random
 from flask_mail import Mail, Message
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -13,6 +14,9 @@ app.secret_key = 'connecther-secret-key'
 #app.config["MONGO_URI"] = "mongodb://localhost:27017/connecther"
 app.config["MONGO_URI"] = "mongodb+srv://admin:connect123@cluster0.eg0o1rm.mongodb.net/connecther?retryWrites=true&w=majority&appName=Cluster0"
 mongo = PyMongo(app)
+
+uni_db_uri = "mongodb+srv://nigarishnavaid0_db_user:hello123@cluster0.3frl0uo.mongodb.net/ConnectHer?retryWrites=true&w=majority"
+uni_mongo = PyMongo(app, uri=uni_db_uri)
 
 # Register your blueprint
 app.register_blueprint(community_bp)
@@ -38,12 +42,13 @@ def register_page():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = request.form.get('email').strip().lower()
+        password = request.form.get('password').strip()
 
         user = mongo.db.users.find_one({'email': email})
 
-        if not user or user['password'] != password:
+        # Use check_password_hash instead of !=
+        if not user or not check_password_hash(user['password'], password):
             flash('Incorrect Password or Email', 'error')
             return redirect(url_for('login'))
 
@@ -69,7 +74,7 @@ def login():
 @app.route('/register', methods=['POST'])
 def register():
     email = request.form.get('email')
-    cnic = request.form.get('cnic')
+    full_name = request.form.get('full_name')
     password = request.form.get('password')
 
     # 1. Check for HU Email
@@ -77,17 +82,23 @@ def register():
         flash('You must enter your HU Email', 'error')
         return redirect(url_for('register_page'))
 
-    # 2. Check CNIC Length
-    if len(cnic) != 13:
-        flash('CNIC must be 13 digits', 'error')
+    # 2. Check Full Name
+    if not full_name or len(full_name.strip()) < 2:
+        flash('Please enter your valid Full Name', 'error')
         return redirect(url_for('register_page'))
 
-    # 3. Check CNIC for numbers only
-    if not cnic.isdigit():
-        flash('CNIC must contain numbers only', 'error')
+    official_record = uni_mongo.db.Uni_directory.find_one({'email': email})
+    
+    if not official_record:
+        flash('This Student ID is not recognized by the university system.', 'error')
+        return redirect(url_for('register_page'))
+
+    # 3. GENDER CHECK
+    if official_record.get('gender') != 'female':
+        flash('You are a man!😡', 'error')
         return redirect(url_for('register_page'))
     
-    #4. Check if user is already registered
+    # 3. Check if user is already registered
     existing_user = mongo.db.users.find_one({'email': email})
     if existing_user:
         flash('User is already registered', 'error')
@@ -96,28 +107,30 @@ def register():
     # Generate a 6-digit OTP
     otp = str(random.randint(100000, 999999))
     
+    # Store everything in session (Hardcoding CNIC as a placeholder)
     session['temp_user'] = {
-        'email': request.form.get('email'),
-        'cnic': request.form.get('cnic'),
-        'password': request.form.get('password'),
+        'email': email,
+        'full_name': full_name,
+        'cnic': "0000000000000", # Placeholder so DB stays consistent
+        'password': password,
         'otp': otp
     }
 
-    # IMPORTANT: Ensure 'sender' matches your MAIL_USERNAME
+    # Send the Email
     msg = Message('Your ConnectHer Verification Code', 
                   sender=app.config['MAIL_USERNAME'], 
-                  recipients=[session['temp_user']['email']])
+                  recipients=[email])
     msg.body = f"Your OTP for ConnectHer registration is: {otp}"
     
     try:
         mail.send(msg)
+        return redirect(url_for('verify_otp'))
     except Exception as e:
         print(f"Error sending email: {e}")
         flash("Error sending email. Please check your credentials.", "error")
         return redirect(url_for('register_page'))
 
-    # Change this to match the name of your verify-otp function
-    return redirect(url_for('verify_otp'))
+from werkzeug.security import generate_password_hash
 
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
@@ -126,16 +139,18 @@ def verify_otp():
         temp_user = session.get('temp_user')
 
         if temp_user and user_otp == temp_user['otp']:
-            # OTP MATCHES - Finally add to MongoDB
-            default_username = temp_user['email'].split('@')[0].replace('.', ' ').title()
+            hashed_password = generate_password_hash(temp_user['password'])
+            
+            # OTP MATCHES - Insert with placeholder CNIC
             mongo.db.users.insert_one({
                 'email': temp_user['email'],
-                'cnic': temp_user['cnic'],
-                'password': temp_user['password'],
-                'username': default_username, # Add this field!
+                'full_name': temp_user['full_name'],
+                'cnic': temp_user['cnic'], # This will be the "00000..." string
+                'password': hashed_password,
                 'status': 'approved'
             })
-            session.pop('temp_user', None) # Clear temp data
+            
+            session.pop('temp_user', None)
             flash("Your request has been approved. Click 'Continue' to proceed", 'success')
             return redirect(url_for('register_page'))
         else:
@@ -171,9 +186,10 @@ def reset_password():
         return redirect(url_for('forgot_password_page'))
 
     # 3. Update Password in MongoDB
+    hashed_new_password = generate_password_hash(new_password)
     mongo.db.users.update_one(
         {'email': email},
-        {'$set': {'password': new_password}}
+        {'$set': {'password': hashed_new_password}}
     )
 
     # 4. Success Verification (Design 7)
@@ -186,8 +202,6 @@ def logout():
     session.pop('user_id', None)
     # Optional: Clear everything from session
     # session.clear() 
-    
-    flash('You have been logged out.', 'success')
     return redirect(url_for('landing'))
 
 @app.route('/seed-data')

@@ -10,6 +10,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
+    <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 9999; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="spinner"></div>
+        <p style="margin-top: 15px; color: #5C4A6E; font-family: sans-serif; font-weight: bold;">Connecting to ConnectHer...</p>
+    </div>
+    <style>
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #8B5FA0; /* Your Brand Purple */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
     <div class="login-wrapper">
         <h1 class="logo-text">ConnectHer</h1>
         
@@ -41,5 +59,16 @@
             <p class="switch-text">Don't have an account? <a href="/register-page">Sign up</a></p>
         </div>
     </div>
+    <script>
+        document.querySelector('form').onsubmit = function() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            const btn = document.querySelector('.login-btn');
+            if (btn) {
+                btn.innerHTML = "Verifying...";
+                btn.disabled = true;
+            }
+        };
+    </script>
 </body>
 </html>
