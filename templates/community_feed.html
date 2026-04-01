@@ -86,20 +86,41 @@
             <div class="post-avatar">{{ post.author_name[0] | upper if post.author_name else '?' }}</div>
             <div class="post-meta">
               <span class="post-author">{{ post.author_name | default('Anonymous') }}</span>
-              <span class="post-time" data-utc-time="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') if post.created_at else '' }}">{{ post.created_at.strftime('%b %d, %Y · %I:%M %p') if post.created_at else '' }}</span>
+              <span class="post-time" data-utc-time="{{ post.created_at.strftime('%Y-%m-%dT%H:%M:%SZ') if post.created_at else '' }}">
+                {{ post.created_at.strftime('%b %d, %Y · %I:%M %p') if post.created_at else '' }}
+              </span>
             </div>
-            <!-- Edit/Delete if own post -->
-            {% if post.author_id == session_user_id %}
+
+            <!-- Admin: Remove user from community -->
+            {% if session.get('is_admin') and post.author_id != session_user_id %}
+            <form method="POST" action="/admin/communities/{{ community._id }}/remove-user/{{ post.author_id }}" style="display:inline">
+              <button type="submit" class="btn-remove-user" onclick="return confirm('Remove this user from the community?')">👤✕</button>
+            </form>
+            {% endif %}
+
+            <!-- Post menu (edit/delete for owner, admin remove for admin) -->
             <div class="post-menu">
               <button class="menu-btn" onclick="toggleMenu('menu-{{ post._id }}')">⋯</button>
               <div class="dropdown-menu" id="menu-{{ post._id }}">
+
+                <!-- Own post: edit and delete -->
+                {% if post.author_id == session_user_id %}
                 <a href="/posts/{{ post._id }}/edit">✏️ Edit</a>
                 <form method="POST" action="/posts/{{ post._id }}/delete">
                   <button type="submit" class="dropdown-delete">🗑️ Delete</button>
                 </form>
+                {% endif %}
+
+                <!-- Admin: delete any post -->
+                {% if session.get('is_admin') and post.author_id != session_user_id %}
+                <form method="POST" action="/admin/posts/{{ post._id }}/delete">
+                  <button type="submit" class="dropdown-delete">🛡️ Admin Remove</button>
+                </form>
+                {% endif %}
+
               </div>
             </div>
-            {% endif %}
+
           </div>
 
           <!-- Post Content -->
@@ -128,7 +149,7 @@
               💬 <span>{{ post.comments | length if post.comments else 0 }}</span>
             </button>
 
-            <!-- Report -->
+            <!-- Report (only for other people's posts) -->
             {% if post.author_id != session_user_id %}
             <form method="POST" action="/posts/{{ post._id }}/report" style="display:inline; margin-left:auto">
               <button type="submit" class="action-btn report-btn" title="Report post">🚩 Report</button>

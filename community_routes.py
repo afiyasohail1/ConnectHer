@@ -371,3 +371,49 @@ def reject_community(community_id):
     db.communities.delete_one({'_id': ObjectId(community_id)})
     flash('Community request rejected and removed.', 'info')
     return redirect(url_for('community.pending_communities'))
+
+
+# ---------------------------------------------------------------------------
+# Admin: Delete any post
+# Route: POST /admin/posts/<post_id>/delete
+# ---------------------------------------------------------------------------
+@community_bp.route('/admin/posts/<post_id>/delete', methods=['POST'])
+def admin_delete_post(post_id):
+    if 'user_id' not in session or not session.get('is_admin', False):
+        flash('Admin access only.', 'danger')
+        return redirect(url_for('community.communities'))
+
+    db = get_db()
+    post = db.posts.find_one({'_id': ObjectId(post_id)})
+    if not post:
+        flash('Post not found.', 'danger')
+        return redirect(url_for('community.communities'))
+
+    community_id = str(post['community_id'])
+    db.posts.delete_one({'_id': ObjectId(post_id)})
+    flash('Post removed by admin.', 'info')
+    return redirect(url_for('community.community_feed', community_id=community_id))
+
+
+# ---------------------------------------------------------------------------
+# Admin: Remove a user from a community
+# Route: POST /admin/communities/<community_id>/remove-user/<user_id>
+# ---------------------------------------------------------------------------
+@community_bp.route('/admin/communities/<community_id>/remove-user/<user_id>', methods=['POST'])
+def admin_remove_user(community_id, user_id):
+    if 'user_id' not in session or not session.get('is_admin', False):
+        flash('Admin access only.', 'danger')
+        return redirect(url_for('community.communities'))
+
+    db = get_db()
+    result = db.memberships.delete_one({
+        'user_id': user_id,
+        'community_id': ObjectId(community_id)
+    })
+
+    if result.deleted_count == 0:
+        flash('User was not a member of this community.', 'info')
+    else:
+        flash('User removed from community.', 'info')
+
+    return redirect(url_for('community.community_feed', community_id=community_id))
