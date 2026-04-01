@@ -145,6 +145,7 @@ def verify_otp():
             mongo.db.users.insert_one({
                 'email': temp_user['email'],
                 'full_name': temp_user['full_name'],
+                'username': temp_user['full_name'],  # Set username to full name initially
                 'cnic': temp_user['cnic'], # This will be the "00000..." string
                 'password': hashed_password,
                 'status': 'approved'
@@ -249,7 +250,15 @@ def dashboard():
     # 2. DYNAMIC ACTIVITY (Count actual posts/comments from DB)
     # This is no longer hardcoded to 5 and 12
     post_count = db.posts.count_documents({'author_id': user_id})
-    comment_count = db.posts.count_documents({'comments.author_id': user_id})
+    
+    # Count total comments by the user across all posts
+    comment_pipeline = [
+        {"$unwind": "$comments"},
+        {"$match": {"comments.author_id": user_id}},
+        {"$count": "total_comments"}
+    ]
+    comment_result = list(db.posts.aggregate(comment_pipeline))
+    comment_count = comment_result[0]['total_comments'] if comment_result else 0
 
     activity = {
         "posts": post_count,
@@ -299,7 +308,16 @@ def edit_profile():
 
     # GET: Fetch current data to pre-fill the edit form
     user_data = db.users.find_one({'_id': ObjectId(user_id)})
-    return render_template('edit_profile.html', user=user_data)
+    
+    # Prepare user dict for template
+    user = {
+        "name": user_data.get('username', ''),
+        "department": user_data.get('department', ''),
+        "interests": user_data.get('interests', ''),
+        "about": user_data.get('about', '')
+    }
+    
+    return render_template('edit_profile.html', user=user)
 
 @app.route('/public-profile')
 def public_profile():
