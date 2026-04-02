@@ -77,9 +77,13 @@ def community_feed(community_id):
         return redirect(url_for('community.communities'))
     posts = list(db.posts.find({'community_id': ObjectId(community_id)}).sort('created_at', -1))
     member_count = db.memberships.count_documents({'community_id': ObjectId(community_id)})
+    is_community_creator = community.get('created_by') == user_id
+    is_site_admin = session.get('is_admin', False)
     return render_template('community_feed.html', community=community, posts=posts,
                            member_count=member_count, session_user_id=user_id,
-                           session_username=session.get('username') or session.get('user', {}).get('name', 'You')
+                           session_username=session.get('username') or session.get('user', {}).get('name', 'You'),
+                           is_community_creator=is_community_creator,
+                           is_site_admin=is_site_admin
     )
 @community_bp.route('/communities/<community_id>/post', methods=['POST'])
 def create_post(community_id):
@@ -340,15 +344,7 @@ def reject_community(community_id):
     return redirect(url_for('community.pending_communities'))
 
 
-<<<<<<< HEAD
 
-
-
-=======
-# ---------------------------------------------------------------------------
-# Community Creator: Delete any post in their community
-# Route: POST /admin/posts/<post_id>/delete
-# ---------------------------------------------------------------------------
 @community_bp.route('/admin/posts/<post_id>/delete', methods=['POST'])
 def admin_delete_post(post_id):
     if 'user_id' not in session:
@@ -362,10 +358,10 @@ def admin_delete_post(post_id):
         flash('Post not found.', 'danger')
         return redirect(url_for('community.communities'))
 
-    # Only the community creator can remove posts
+    # Only the community creator or site admin can remove posts
     community = db.communities.find_one({'_id': post['community_id']})
-    if not community or community.get('created_by') != user_id:
-        flash('Only the community creator can remove posts.', 'danger')
+    if not community or (community.get('created_by') != user_id and not session.get('is_admin', False)):
+        flash('Only the community creator or an admin can remove posts.', 'danger')
         return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
 
     community_id = str(post['community_id'])
@@ -387,10 +383,10 @@ def admin_remove_user(community_id, user_id):
     db = get_db()
     current_user_id = session['user_id']
 
-    # Only the community creator can remove members
+    # Only the community creator or site admin can remove members
     community = db.communities.find_one({'_id': ObjectId(community_id)})
-    if not community or community.get('created_by') != current_user_id:
-        flash('Only the community creator can remove members.', 'danger')
+    if not community or (community.get('created_by') != current_user_id and not session.get('is_admin', False)):
+        flash('Only the community creator or an admin can remove members.', 'danger')
         return redirect(url_for('community.community_feed', community_id=community_id))
 
     result = db.memberships.delete_one({
@@ -404,4 +400,4 @@ def admin_remove_user(community_id, user_id):
         flash('User removed from community. 🛡️', 'info')
 
     return redirect(url_for('community.community_feed', community_id=community_id))
->>>>>>> b15c34f6a30c4f620a899aa0ae1ed80db6b00c6f
+

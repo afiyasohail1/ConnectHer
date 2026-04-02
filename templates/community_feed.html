@@ -94,8 +94,8 @@
               </span>
             </div>
 
-            <!-- Admin: Remove user from community -->
-            {% if session.get('is_admin') and post.author_id != session_user_id %}
+            <!-- Admin / Community creator: Remove user from community -->
+            {% if (is_site_admin or is_community_creator) and post.author_id != session_user_id %}
             <form method="POST" action="/admin/communities/{{ community._id }}/remove-user/{{ post.author_id }}" style="display:inline">
               <button type="submit" class="btn-remove-user" onclick="return confirm('Remove this user from the community?')">👤✕</button>
             </form>
@@ -114,8 +114,8 @@
                 </form>
                 {% endif %}
 
-                <!-- Admin: delete any post -->
-                {% if session.get('is_admin') and post.author_id != session_user_id %}
+                <!-- Admin / Community creator: delete any post -->
+                {% if (is_site_admin or is_community_creator) and post.author_id != session_user_id %}
                 <form method="POST" action="/admin/posts/{{ post._id }}/delete">
                   <button type="submit" class="dropdown-delete">🛡️ Admin Remove</button>
                 </form>
