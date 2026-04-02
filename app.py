@@ -276,6 +276,34 @@ def dashboard():
         lending=lending,
         recent=recent
     )
+
+@app.route('/home')
+def home():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    from bson.objectid import ObjectId
+    db = mongo.db
+    user_id = session['user_id']
+
+    # Get communities the user is a member of
+    memberships = db.memberships.find({'user_id': user_id})
+    community_ids = [m['community_id'] for m in memberships]
+
+    if not community_ids:
+        # User hasn't joined any communities yet
+        posts = []
+    else:
+        # Get posts from joined communities, sorted by newest first
+        posts = list(db.posts.find({'community_id': {'$in': community_ids}}).sort('created_at', -1))
+
+        # Add community names to posts
+        for post in posts:
+            community = db.communities.find_one({'_id': post['community_id']})
+            post['community_name'] = community['name'] if community else 'Unknown Community'
+
+    return render_template('home.html', posts=posts, session_user_id=user_id)
+
 @app.route('/edit-profile', methods=['GET', 'POST'])
 def edit_profile():
     if 'user_id' not in session:
