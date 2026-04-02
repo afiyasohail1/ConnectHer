@@ -36,6 +36,9 @@
         <h1>{{ community.name }}</h1>
         <p>{{ community.description }}</p>
         <span class="member-pill">👥 {{ member_count }} members</span>
+        {% if community.created_by == session_user_id %}
+          <span class="creator-badge">👑 You created this</span>
+        {% endif %}
       </div>
       <a href="/communities" class="btn-back">← Back to Communities</a>
     </div>
@@ -91,7 +94,14 @@
               </span>
             </div>
 
-            <!-- Post menu (edit/delete for owner, admin remove for admin) -->
+            <!-- Admin: Remove user from community -->
+            {% if session.get('is_admin') and post.author_id != session_user_id %}
+            <form method="POST" action="/admin/communities/{{ community._id }}/remove-user/{{ post.author_id }}" style="display:inline">
+              <button type="submit" class="btn-remove-user" onclick="return confirm('Remove this user from the community?')">👤✕</button>
+            </form>
+            {% endif %}
+
+            <!-- Post options menu -->
             <div class="post-menu">
               <button class="menu-btn" onclick="toggleMenu('menu-{{ post._id }}')">⋯</button>
               <div class="dropdown-menu" id="menu-{{ post._id }}">
@@ -104,6 +114,12 @@
                 </form>
                 {% endif %}
 
+                <!-- Admin: delete any post -->
+                {% if session.get('is_admin') and post.author_id != session_user_id %}
+                <form method="POST" action="/admin/posts/{{ post._id }}/delete">
+                  <button type="submit" class="dropdown-delete">🛡️ Admin Remove</button>
+                </form>
+                {% endif %}
 
               </div>
             </div>

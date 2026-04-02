@@ -9,14 +9,6 @@ def get_db():
     from app import mongo
     return mongo.db
 
-def get_redirect_destination(post):
-    """Check referrer to determine if redirect to home or community feed"""
-    referrer = request.referrer or ''
-    if '/home' in referrer:
-        return url_for('community.home')
-    else:
-        return url_for('community.community_feed', community_id=str(post['community_id']))
-
 @community_bp.route('/communities')
 def communities():
     if 'user_id' not in session:
@@ -87,32 +79,8 @@ def community_feed(community_id):
     member_count = db.memberships.count_documents({'community_id': ObjectId(community_id)})
     return render_template('community_feed.html', community=community, posts=posts,
                            member_count=member_count, session_user_id=user_id,
-                           session_username=session.get('username', 'You'))
-
-@community_bp.route('/home')
-def home():
-    if 'user_id' not in session:
-        flash('Please log in first.', 'danger')
-        return redirect(url_for('fake_login'))
-
-    db = get_db()
-    user_id = session['user_id']
-
-    # Get all communities the user has joined
-    joined = db.memberships.find({'user_id': user_id})
-    joined_ids = [m['community_id'] for m in joined]
-
-    # Fetch recent posts from those communities
-    posts = list(db.posts.find({'community_id': {'$in': joined_ids}}).sort('created_at', -1))
-
-    # Add community name into each post for display
-    community_names = {c['_id']: c['name'] for c in db.communities.find({'_id': {'$in': joined_ids}})}
-    for post in posts:
-        post['community_name'] = community_names.get(post['community_id'], 'Community')
-
-    return render_template('home.html', posts=posts, session_user_id=user_id,
-                           session_username=session.get('username', 'You'))
-
+                           session_username=session.get('username') or session.get('user', {}).get('name', 'You')
+    )
 @community_bp.route('/communities/<community_id>/post', methods=['POST'])
 def create_post(community_id):
     if 'user_id' not in session:
@@ -120,8 +88,7 @@ def create_post(community_id):
         return redirect(url_for('fake_login'))
     db = get_db()
     user_id = session['user_id']
-    user = db.users.find_one({'_id': ObjectId(user_id)})
-    username = session.get('username') or (user.get('username') if user else 'Anonymous') or 'Anonymous'
+    username = session.get('username') or session.get('user', {}).get('name', 'Anonymous')
     content = request.form.get('content', '').strip()
     image_url = None
     if not content:
@@ -158,7 +125,7 @@ def edit_post(post_id):
         return redirect(url_for('community.communities'))
     if post['author_id'] != user_id:
         flash('You can only edit your own posts.', 'danger')
-        return redirect(get_redirect_destination(post))
+        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
     if request.method == 'POST':
         new_content = request.form.get('content', '').strip()
         if not new_content:
@@ -166,7 +133,7 @@ def edit_post(post_id):
         else:
             db.posts.update_one({'_id': ObjectId(post_id)}, {'$set': {'content': new_content, 'edited_at': datetime.utcnow()}})
             flash('Post updated! ✏️', 'success')
-        return redirect(get_redirect_destination(post))
+        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
     return render_template('edit_post.html', post=post)
 
 @community_bp.route('/posts/<post_id>/delete', methods=['POST'])
@@ -182,10 +149,11 @@ def delete_post(post_id):
         return redirect(url_for('community.communities'))
     if post['author_id'] != user_id:
         flash('You can only delete your own posts.', 'danger')
-        return redirect(get_redirect_destination(post))
+        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+    community_id = str(post['community_id'])
     db.posts.delete_one({'_id': ObjectId(post_id)})
     flash('Post deleted.', 'info')
-    return redirect(get_redirect_destination(post))
+    return redirect(url_for('community.community_feed', community_id=community_id))
 
 @community_bp.route('/posts/<post_id>/like', methods=['POST'])
 def like_post(post_id):
@@ -203,7 +171,7 @@ def like_post(post_id):
         db.posts.update_one({'_id': ObjectId(post_id)}, {'$pull': {'liked_by': user_id}, '$inc': {'likes': -1}})
     else:
         db.posts.update_one({'_id': ObjectId(post_id)}, {'$push': {'liked_by': user_id}, '$inc': {'likes': 1}})
-    return redirect(get_redirect_destination(post))
+    return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
 
 @community_bp.route('/posts/<post_id>/comment', methods=['POST'])
 def comment_post(post_id):
@@ -212,8 +180,7 @@ def comment_post(post_id):
         return redirect(url_for('fake_login'))
     db = get_db()
     user_id = session['user_id']
-    user = db.users.find_one({'_id': ObjectId(user_id)})
-    username = session.get('username') or (user.get('username') if user else 'Anonymous') or 'Anonymous'
+    username = session.get('username') or session.get('user', {}).get('name', 'Anonymous')
     comment_text = request.form.get('comment_text', '').strip()
     post = db.posts.find_one({'_id': ObjectId(post_id)})
     if not post:
@@ -221,10 +188,10 @@ def comment_post(post_id):
         return redirect(url_for('community.communities'))
     if not comment_text:
         flash('Comment cannot be empty.', 'danger')
-        return redirect(get_redirect_destination(post))
+        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
     comment = {'author_id': user_id, 'author_name': username, 'text': comment_text, 'created_at': datetime.utcnow()}
     db.posts.update_one({'_id': ObjectId(post_id)}, {'$push': {'comments': comment}})
-    return redirect(get_redirect_destination(post))
+    return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
 
 @community_bp.route('/posts/<post_id>/report', methods=['POST'])
 def report_post(post_id):
@@ -240,12 +207,12 @@ def report_post(post_id):
     existing_report = db.reports.find_one({'post_id': ObjectId(post_id), 'reported_by': user_id})
     if existing_report:
         flash('You have already reported this post.', 'info')
-        return redirect(get_redirect_destination(post))
+        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
     db.reports.insert_one({'post_id': ObjectId(post_id), 'reported_by': user_id,
                            'community_id': post['community_id'], 'reason': 'Reported by user',
                            'status': 'pending', 'created_at': datetime.utcnow()})
     flash('Post reported. Our admin will review it. 🚩', 'info')
-    return redirect(get_redirect_destination(post))
+    return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
 
 
 # ---------------------------------------------------------------------------
@@ -262,7 +229,7 @@ def create_community():
 
     db = get_db()
     user_id  = session['user_id']
-   
+    is_admin = session.get('is_admin', False)
 
     if request.method == 'POST':
         name        = request.form.get('name', '').strip()
@@ -296,8 +263,8 @@ def create_community():
             image_file.save(os.path.join(upload_folder, filename))
             image_url = f"/static/uploads/{filename}"
 
-        # Auto-approve community creation for now
-        status = 'active'
+        # Status depends on who is creating
+        status = 'active' 
 
         db.communities.insert_one({
             'name':            name,
@@ -309,15 +276,15 @@ def create_community():
             'created_by':      user_id,
             'created_by_name': session.get('username', 'Unknown'),
             'created_at':      datetime.utcnow(),
-            'approved_at':     datetime.utcnow(),
             'member_count':    0
         })
 
-        flash(f'Your community "{name}" has been created and is now live! 🌸', 'success')
+        
+        flash(f'Your community "{name}" is now live! 🌸', 'success')
         return redirect(url_for('community.communities'))
 
-    return render_template('create_community.html', is_admin=False)
-
+    return render_template('create_community.html', is_admin=is_admin)
+    
 
 
 # ---------------------------------------------------------------------------
@@ -373,6 +340,68 @@ def reject_community(community_id):
     return redirect(url_for('community.pending_communities'))
 
 
+<<<<<<< HEAD
 
 
 
+=======
+# ---------------------------------------------------------------------------
+# Community Creator: Delete any post in their community
+# Route: POST /admin/posts/<post_id>/delete
+# ---------------------------------------------------------------------------
+@community_bp.route('/admin/posts/<post_id>/delete', methods=['POST'])
+def admin_delete_post(post_id):
+    if 'user_id' not in session:
+        flash('Please log in first.', 'danger')
+        return redirect(url_for('fake_login'))
+
+    db = get_db()
+    user_id = session['user_id']
+    post = db.posts.find_one({'_id': ObjectId(post_id)})
+    if not post:
+        flash('Post not found.', 'danger')
+        return redirect(url_for('community.communities'))
+
+    # Only the community creator can remove posts
+    community = db.communities.find_one({'_id': post['community_id']})
+    if not community or community.get('created_by') != user_id:
+        flash('Only the community creator can remove posts.', 'danger')
+        return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+
+    community_id = str(post['community_id'])
+    db.posts.delete_one({'_id': ObjectId(post_id)})
+    flash('Post removed. 🛡️', 'info')
+    return redirect(url_for('community.community_feed', community_id=community_id))
+
+
+# ---------------------------------------------------------------------------
+# Community Creator: Remove a user from their community
+# Route: POST /admin/communities/<community_id>/remove-user/<user_id>
+# ---------------------------------------------------------------------------
+@community_bp.route('/admin/communities/<community_id>/remove-user/<user_id>', methods=['POST'])
+def admin_remove_user(community_id, user_id):
+    if 'user_id' not in session:
+        flash('Please log in first.', 'danger')
+        return redirect(url_for('fake_login'))
+
+    db = get_db()
+    current_user_id = session['user_id']
+
+    # Only the community creator can remove members
+    community = db.communities.find_one({'_id': ObjectId(community_id)})
+    if not community or community.get('created_by') != current_user_id:
+        flash('Only the community creator can remove members.', 'danger')
+        return redirect(url_for('community.community_feed', community_id=community_id))
+
+    result = db.memberships.delete_one({
+        'user_id': user_id,
+        'community_id': ObjectId(community_id)
+    })
+
+    if result.deleted_count == 0:
+        flash('User was not a member of this community.', 'info')
+    else:
+        flash('User removed from community. 🛡️', 'info')
+
+    return redirect(url_for('community.community_feed', community_id=community_id))
+>>>>>>> b15c34f6a30c4f620a899aa0ae1ed80db6b00c6f
