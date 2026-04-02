@@ -121,6 +121,25 @@ body {
   display: inline-block;
 }
 
+.creator-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  color: var(--white);
+  font-size: 12px; font-weight: 600;
+  padding: 4px 12px; border-radius: 50px;
+  margin-left: 8px;
+}
+
+.btn-remove-user {
+  background: none; border: none;
+  color: #c0392b; font-size: 13px;
+  cursor: pointer; padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.btn-remove-user:hover { background: #fce4ec; }
+
 .btn-back {
   text-decoration: none;
   color: rgba(255,255,255,0.85);
