@@ -4,8 +4,10 @@ from community_routes import community_bp
 import random
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
+from item_routes import items_bp        # add at the top with other imports
 
 app = Flask(__name__)
+app.register_blueprint(items_bp)        # add below the community blueprint line
 
 # Secret key (needed for session/login to work)
 app.secret_key = 'connecther-secret-key'

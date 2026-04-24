@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Borrow Requests – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/items.css') }}">
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/home">🏠 Home</a></li>
+      <li><a href="/communities">🌸 Communities</a></li>
+      <li class="active"><a href="/items">🛍️ Items</a></li>
+      <li><a href="/dashboard">👤 Profile</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="form-page-wrap">
+
+      <a href="/items" class="back-link">← Back to Items</a>
+
+      <div class="form-header">
+        <h1>Borrow Requests</h1>
+        <p>Requests for: <strong>{{ item.name }}</strong></p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% if requests %}
+      <div class="requests-list">
+        {% for req in requests %}
+        <div class="request-card">
+          <div class="requester-info">
+            <div class="requester-avatar">{{ req.requester_name[0] | upper if req.requester_name else '?' }}</div>
+            <div>
+              <span class="requester-name">{{ req.requester_name }}</span>
+              <span class="request-date">Requested {{ req.created_at.strftime('%b %d, %Y') if req.created_at else '' }}</span>
+            </div>
+          </div>
+          <div class="request-actions">
+            <span class="status-badge {{ req.status }}">{{ req.status | capitalize }}</span>
+            {% if req.status == 'pending' %}
+            <form method="POST" action="/items/requests/{{ req._id }}/approve" style="display:inline">
+              <button type="submit" class="btn-approve">✓ Approve</button>
+            </form>
+            <form method="POST" action="/items/requests/{{ req._id }}/reject" style="display:inline">
+              <button type="submit" class="btn-reject">✕ Reject</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" style="margin-top:40px">
+        <p>No borrow requests yet for this item. 🌸</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </main>
+</body>
+</html>

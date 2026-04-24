@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Item – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/items.css') }}">
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/home">🏠 Home</a></li>
+      <li><a href="/communities">🌸 Communities</a></li>
+      <li class="active"><a href="/items">🛍️ Items</a></li>
+      <li><a href="/dashboard">👤 Profile</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="form-page-wrap">
+
+      <a href="/items" class="back-link">← Back to Items</a>
+
+      <div class="form-header">
+        <h1>Edit Item</h1>
+        <p>Update your listing details 🌸</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="form-card">
+        <form method="POST" action="/items/{{ item._id }}/edit" enctype="multipart/form-data">
+
+          <!-- Image Upload -->
+          <div class="image-upload-section">
+            <div class="image-preview-circle" id="imageCircle" onclick="document.getElementById('imageInput').click()">
+              {% if item.image_url %}
+                <img id="previewImg" src="{{ item.image_url }}" alt="{{ item.name }}" style="display:block"/>
+                <div class="image-placeholder" id="imagePlaceholder" style="display:none">
+              {% else %}
+                <img id="previewImg" src="" alt="" style="display:none"/>
+                <div class="image-placeholder" id="imagePlaceholder">
+              {% endif %}
+                  <span>📷</span>
+                  <span>Add Photo</span>
+                  <span class="optional-tag">(optional)</span>
+                </div>
+            </div>
+            <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)" style="display:none"/>
+            <div class="image-btns">
+              <button type="button" class="btn-upload" onclick="document.getElementById('imageInput').click()">
+                {% if item.image_url %}Change Image{% else %}Upload Image{% endif %}
+              </button>
+              <button type="button" class="btn-clear-img" id="clearBtn" onclick="clearImage()"
+                style="display:{% if item.image_url %}inline-block{% else %}none{% endif %}">
+                Remove
+              </button>
+            </div>
+            <!-- Hidden field to track if image was removed -->
+            <input type="hidden" name="remove_image" id="removeImage" value="0"/>
+          </div>
+
+          <!-- Item Name -->
+          <div class="form-group">
+            <label for="name">Item Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" value="{{ item.name }}"
+                   maxlength="100" required oninput="updateCount('name','nameCount',100)"/>
+            <div class="field-footer">
+              <span></span>
+              <span class="char-count" id="nameCount">{{ item.name|length }} / 100</span>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label>Category <span class="required">*</span></label>
+            <div class="category-select-grid">
+              <label class="cat-radio">
+                <input type="radio" name="category" value="clothes" {% if item.category == 'clothes' %}checked{% endif %} required/>
+                <span>👗 Clothes</span>
+              </label>
+              <label class="cat-radio">
+                <input type="radio" name="category" value="jewelry" {% if item.category == 'jewelry' %}checked{% endif %}/>
+                <span>💍 Jewelry</span>
+              </label>
+              <label class="cat-radio">
+                <input type="radio" name="category" value="books" {% if item.category == 'books' %}checked{% endif %}/>
+                <span>📚 Books</span>
+              </label>
+              <label class="cat-radio">
+                <input type="radio" name="category" value="other" {% if item.category == 'other' %}checked{% endif %}/>
+                <span>📦 Other</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description">Description <span class="required">*</span></label>
+            <textarea id="description" name="description"
+                      maxlength="500" required
+                      oninput="updateCount('description','descCount',500)">{{ item.description }}</textarea>
+            <div class="field-footer">
+              <span class="field-hint">Include size, condition, and any lending terms</span>
+              <span class="char-count" id="descCount">{{ item.description|length }} / 500</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <a href="/items" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-submit">✦ Save Changes</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/items.js') }}"></script>
+  <script>
+    // Override clearImage to also set the hidden remove_image field
+    function clearImage() {
+      document.getElementById('imageInput').value = '';
+      const img = document.getElementById('previewImg');
+      const placeholder = document.getElementById('imagePlaceholder');
+      const clearBtn = document.getElementById('clearBtn');
+      if (img) { img.src = ''; img.style.display = 'none'; }
+      if (placeholder) placeholder.style.display = 'flex';
+      if (clearBtn) clearBtn.style.display = 'none';
+      document.getElementById('removeImage').value = '1';
+    }
+  </script>
+</body>
+</html>
