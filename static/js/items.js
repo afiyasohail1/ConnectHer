@@ -9,10 +9,13 @@ function switchTab(tab, btn) {
 // Search filter
 function filterItems() {
   const query = document.getElementById('searchInput').value.toLowerCase();
-  document.querySelectorAll('#itemsGrid .item-card').forEach(card => {
-    const name = card.getAttribute('data-name') || '';
-    card.style.display = name.includes(query) ? '' : 'none';
-  });
+  const activeTab = document.querySelector('.tab-section.active');
+  if (activeTab) {
+    activeTab.querySelectorAll('.item-card').forEach(card => {
+      const name = card.getAttribute('data-name') || '';
+      card.style.display = name.includes(query) ? '' : 'none';
+    });
+  }
 }
 
 // Category filter
@@ -21,10 +24,13 @@ function filterCategory(cat, btn) {
   activeCategory = cat;
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.querySelectorAll('#itemsGrid .item-card').forEach(card => {
-    const cardCat = card.getAttribute('data-category') || '';
-    card.style.display = (cat === 'all' || cardCat === cat) ? '' : 'none';
-  });
+  const activeTab = document.querySelector('.tab-section.active');
+  if (activeTab) {
+    activeTab.querySelectorAll('.item-card').forEach(card => {
+      const cardCat = card.getAttribute('data-category') || '';
+      card.style.display = (cat === 'all' || cardCat === cat) ? '' : 'none';
+    });
+  }
 }
 
 // Image preview for post item form
@@ -62,4 +68,42 @@ function updateCount(inputId, countId, max) {
   const len = el.value.length;
   counter.textContent = len + ' / ' + max;
   counter.style.color = len > max * 0.9 ? '#e74c3c' : 'var(--text-light)';
+}
+
+// Form validation for post item
+function validatePostItemForm(event) {
+  const nameInput = document.getElementById('name');
+  const categoryInput = document.querySelector('input[name="category"]:checked');
+  const descInput = document.getElementById('description');
+  
+  const errors = [];
+  
+  if (!nameInput.value.trim()) {
+    errors.push('Item name is required.');
+  }
+  if (!categoryInput) {
+    errors.push('Category is required.');
+  }
+  if (!descInput.value.trim()) {
+    errors.push('Description is required.');
+  }
+  
+  if (errors.length > 0) {
+    event.preventDefault();
+    // Create or clear error message div
+    let errorDiv = document.getElementById('formErrorMsg');
+    if (!errorDiv) {
+      errorDiv = document.createElement('div');
+      errorDiv.id = 'formErrorMsg';
+      errorDiv.className = 'flash flash-danger';
+      const form = document.querySelector('form');
+      form.parentNode.insertBefore(errorDiv, form);
+    }
+    errorDiv.textContent = errors.join(' ');
+    errorDiv.style.display = 'block';
+    // Scroll to error
+    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
 }

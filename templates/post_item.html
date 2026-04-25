@@ -44,7 +44,7 @@
       {% endwith %}
 
       <div class="form-card">
-        <form method="POST" action="/items/post" enctype="multipart/form-data">
+        <form method="POST" action="/items/post" enctype="multipart/form-data" onsubmit="return validatePostItemForm(event)">
 
           <!-- Image Upload -->
           <div class="image-upload-section">

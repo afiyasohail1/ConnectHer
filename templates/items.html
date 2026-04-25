@@ -124,12 +124,12 @@
 
     <!-- MY LISTINGS TAB -->
     <section id="tab-mine" class="tab-section">
-      <div class="items-grid">
+      <div class="items-grid" id="myListingsGrid">
         {% set has_mine = [] %}
         {% for item in items %}
         {% if item.owner_id == session_user_id %}
         {% set _ = has_mine.append(1) %}
-        <div class="item-card">
+        <div class="item-card" data-name="{{ item.name|lower }}" data-category="{{ item.category|lower }}">
           <div class="item-img-wrap">
             {% if item.image_url %}
               <img src="{{ item.image_url }}" alt="{{ item.name }}" class="item-img"/>
@@ -154,9 +154,11 @@
                 <a href="/items/{{ item._id }}/requests" class="btn-view-requests">View Requests</a>
               {% endif %}
                 <a href="/items/{{ item._id }}/edit" class="btn-edit-item">✏️ Edit</a>
+                {% if item.status != 'borrowed' %}
                 <form method="POST" action="/items/{{ item._id }}/delete">
                   <button type="submit" class="btn-delete-item" onclick="return confirm('Delete this item?')">🗑️</button>
                 </form>
+                {% endif %}
             </div>
           </div>
         </div>
@@ -172,11 +174,11 @@
 
     <!-- MY REQUESTS TAB -->
     <section id="tab-borrowed" class="tab-section">
-      <div class="items-grid">
+      <div class="items-grid" id="myRequestsGrid">
         {% set has_requests = [] %}
         {% for req in my_requests %}
         {% set _ = has_requests.append(1) %}
-        <div class="item-card">
+        <div class="item-card" data-name="{{ req.item_name|lower }}" data-category="borrowed">
           <div class="item-img-wrap">
             {% if req.item_image %}
               <img src="{{ req.item_image }}" alt="{{ req.item_name }}" class="item-img"/>

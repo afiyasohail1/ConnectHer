@@ -365,6 +365,10 @@ def delete_item(item_id):
         flash('You can only delete your own items.', 'danger')
         return redirect(url_for('items.items'))
 
+    if item.get('status') == 'borrowed':
+        flash('Cannot delete an item that is currently borrowed.', 'danger')
+        return redirect(url_for('items.items'))
+
     # Delete item and its requests
     db.items.delete_one({'_id': ObjectId(item_id)})
     db.borrow_requests.delete_many({'item_id': ObjectId(item_id)})
