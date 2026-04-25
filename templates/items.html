@@ -73,7 +73,7 @@
     <section id="tab-all" class="tab-section active">
       <div class="items-grid" id="itemsGrid">
         {% for item in items %}
-        {% if item.status == 'available' %}
+        {% if item.status in ['available', 'borrowed'] %}
         <div class="item-card" data-name="{{ item.name|lower }}" data-category="{{ item.category|lower }}">
           <div class="item-img-wrap">
             {% if item.image_url %}
@@ -98,9 +98,11 @@
           </div>
           <div class="item-footer">
 
-            <span class="status-badge available">Available</span>
+            <span class="status-badge {{ item.status }}">{{ item.status | capitalize }}</span>
             {% if item.owner_id == session_user_id %}
               <button class="btn-owned" disabled>Your Listing</button>
+            {% elif item.status == 'borrowed' %}
+              <button class="btn-unavailable" disabled>Currently Unavailable</button>
             {% elif item._id|string in requested_ids %}
               <button class="btn-requested" disabled>✓ Requested</button>
             {% else %}

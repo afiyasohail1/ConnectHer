@@ -131,6 +131,11 @@ def request_item(item_id):
         flash('Item not found.', 'danger')
         return redirect(url_for('items.items'))
 
+    # Check if item is available
+    if item.get('status') != 'available':
+        flash('This item is currently unavailable.', 'danger')
+        return redirect(url_for('items.items'))
+
     # Can't borrow your own item
     if item['owner_id'] == user_id:
         flash("You can't borrow your own item.", 'info')
