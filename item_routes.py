@@ -266,6 +266,41 @@ def reject_request(request_id):
 
 
 # ---------------------------------------------------------------------------
+# Cancel a borrow request (borrower action)
+# Route: POST /items/requests/<request_id>/cancel
+# ---------------------------------------------------------------------------
+@items_bp.route('/items/requests/<request_id>/cancel', methods=['POST'])
+def cancel_request(request_id):
+    if 'user_id' not in session:
+        flash('Please log in first.', 'danger')
+        return redirect(url_for('login'))
+
+    db = get_db()
+    user_id = session['user_id']
+
+    req = db.borrow_requests.find_one({'_id': ObjectId(request_id)})
+    if not req:
+        flash('Request not found.', 'danger')
+        return redirect(url_for('items.items'))
+
+    if req['requester_id'] != user_id:
+        flash('Only the borrower can cancel their request.', 'danger')
+        return redirect(url_for('items.items'))
+
+    if req.get('status') != 'pending':
+        flash('Only pending requests can be cancelled.', 'info')
+        return redirect(url_for('items.items'))
+
+    db.borrow_requests.update_one(
+        {'_id': ObjectId(request_id)},
+        {'$set': {'status': 'cancelled', 'cancelled_at': datetime.utcnow()}}
+    )
+
+    flash('Borrow request cancelled.', 'info')
+    return redirect(url_for('items.items'))
+
+
+# ---------------------------------------------------------------------------
 # Mark item as returned (borrower action)
 # Route: POST /items/requests/<request_id>/return
 # ---------------------------------------------------------------------------

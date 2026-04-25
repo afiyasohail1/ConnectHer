@@ -191,6 +191,10 @@
               <form method="POST" action="/items/requests/{{ req._id }}/return">
                 <button type="submit" class="btn-return">Mark as Returned</button>
               </form>
+            {% elif req.status == 'pending' %}
+              <form method="POST" action="/items/requests/{{ req._id }}/cancel">
+                <button type="submit" class="btn-cancel">Cancel Request</button>
+              </form>
             {% endif %}
           </div>
         </div>
