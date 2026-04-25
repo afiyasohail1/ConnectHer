@@ -340,6 +340,23 @@
             <div class="empty">No pending communities 🌸</div>
         {% endif %}
     </div>
+    <div class="section">
+    <div class="section-title">📦 Lending History</div>
+
+    {% if lending %}
+    <div class="grid">
+        {% for l in lending %}
+        <div class="card">
+            <p><b>{{ l.item_name }}</b></p>
+            <p>{{ l.lender_name }} → {{ l.borrower }}</p>
+            <small>{{ l.status }} • {{ l.date }}</small>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty">No lending records</div>
+    {% endif %}
+</div>
 
 </div>
 

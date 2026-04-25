@@ -5,7 +5,9 @@ from item_routes import items_bp
 import random
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 from bson.objectid import ObjectId
+
 
 app = Flask(__name__)
 
@@ -360,7 +362,9 @@ def dashboard():
     }
 
     # 3. LENDING & RECENT (Keep empty for now as per your request)
-    lending = [] 
+    lending = list(mongo.db.lending.find({
+    "lender": session['user_id']
+    }))
     recent = []
 
     return render_template(
@@ -554,7 +558,6 @@ def resolve_report():
 @app.route('/admin/dashboard')
 def admin_dashboard():
 
-    from bson.objectid import ObjectId
 
     # Get reported posts
     reports = list(mongo.db.reports.find({"status": "pending"}))
@@ -562,10 +565,14 @@ def admin_dashboard():
     # Get pending communities
     communities = list(mongo.db.communities.find({"status": "pending"}))
 
+    # Get lending requests
+    lending = list(mongo.db.lending.find().sort('_id', -1))
+
     return render_template(
         'admin_dashboard.html',
         reports=reports,
-        communities=communities
+        communities=communities,
+        lending=lending
     )
 @app.route('/admin/approve-community', methods=['POST'])
 def approve_community():
@@ -596,5 +603,22 @@ def delete_community():
 #     session['is_admin'] = True
 #     return "Now you are admin"
 
+@app.route('/add-lending', methods=['POST'])
+def add_lending():
+
+    item_name = request.form['item_name']
+    borrower = request.form['borrower']
+
+    # SAVE DATA
+    mongo.db.lending.insert_one({
+        "item_name": item_name,
+        "lender": session['user_id'],
+        "lender_name": session.get('username', 'Unknown'),
+        "borrower": borrower,
+        "status": "borrowed",
+        "date": "today"
+    })
+
+    return redirect('/dashboard')
 if __name__ == '__main__':
     app.run(debug=True)
