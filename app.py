@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_pymongo import PyMongo
 from community_routes import community_bp
+from item_routes import items_bp
 import random
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -20,8 +21,9 @@ mongo = PyMongo(app)
 uni_db_uri = "mongodb+srv://nigarishnavaid0_db_user:hello123@cluster0.3frl0uo.mongodb.net/ConnectHer?retryWrites=true&w=majority"
 uni_mongo = PyMongo(app, uri=uni_db_uri)
 
-# Register your blueprint
+# Register your blueprints
 app.register_blueprint(community_bp)
+app.register_blueprint(items_bp)
 
 
 # Configure Flask-Mail (Use your HU email password)
