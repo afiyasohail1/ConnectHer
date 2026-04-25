@@ -4,6 +4,7 @@ from community_routes import community_bp
 import random
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
 
@@ -12,10 +13,10 @@ app.secret_key = 'connecther-secret-key'
 
 # MongoDB connection
 #app.config["MONGO_URI"] = "mongodb://localhost:27017/connecther"
-app.config["MONGO_URI"] = "mongodb+srv://admin:connect123@cluster0.eg0o1rm.mongodb.net/connecther?retryWrites=true&w=majority&appName=Cluster0"
+app.config["MONGO_URI"] = "mongodb://admin:connect123@cluster0-shard-00-00.eg0o1rm.mongodb.net:27017,cluster0-shard-00-01.eg0o1rm.mongodb.net:27017,cluster0-shard-00-02.eg0o1rm.mongodb.net:27017/connecther?ssl=true&replicaSet=atlas-shard-0&authSource=admin&retryWrites=true&w=majority"
 mongo = PyMongo(app)
 
-uni_db_uri = "mongodb+srv://nigarishnavaid0_db_user:hello123@cluster0.3frl0uo.mongodb.net/ConnectHer?retryWrites=true&w=majority"
+uni_db_uri = "mongodb://nigarishnavaid0_db_user:hello123@cluster0-shard-00-00.3frl0uo.mongodb.net:27017,cluster0-shard-00-01.3frl0uo.mongodb.net:27017,cluster0-shard-00-02.3frl0uo.mongodb.net:27017/ConnectHer?ssl=true&replicaSet=atlas-shard-0&authSource=admin&retryWrites=true&w=majority"
 uni_mongo = PyMongo(app, uri=uni_db_uri)
 
 # Register your blueprint
@@ -33,6 +34,21 @@ mail = Mail(app)
 @app.route('/')
 def landing():
     return render_template('landing.html')
+
+@app.route('/admin-auth')
+def admin_auth():
+    return render_template('admin_auth.html')
+
+@app.route('/admin-dashboard')
+def admin_dashboard():
+    # In a real app, you'd check for a session/cookie here to ensure the user actually entered the key
+    return render_template('admin_dashboard.html')
+
+@app.route('/admin/users')
+def admin_users():
+    # Fetch all users from the MongoDB database
+    all_users = list(mongo.db.users.find())
+    return render_template('admin_users.html', users=all_users)
 
 @app.route('/register-page')
 def register_page():
@@ -347,34 +363,36 @@ def edit_profile():
     
     return render_template('edit_profile.html', user=user)
 
-@app.route('/public-profile')
-def public_profile():
+@app.route('/public-profile/<user_id>')
+def public_profile(user_id):
+    try:
+        user_data = mongo.db.users.find_one({'_id': ObjectId(user_id)})
+    except:
+        flash("Invalid user ID format.", "error")
+        return redirect(url_for('admin_users'))
+
+    if not user_data:
+        flash("User not found.", "error")
+        return redirect(url_for('admin_users'))
+
+    # Map the actual MongoDB data to the dictionary expected by your template
+    # If the user hasn't set up interests, it defaults to empty
+    raw_interests = user_data.get('interests', '')
+    tags = raw_interests.split(',') if raw_interests else []
 
     user = {
-        "name": "Sarah Khalid",
-        "department": "Computer Science",
-        "tags": ["AI", "Entrepreneurship", "Design"],
-        "about": "Passionate about building innovative solutions and connecting with fellow students.",
+        "name": user_data.get('full_name', user_data.get('username', 'Unknown Member')),
+        "department": user_data.get('department', 'Department not specified'),
+        "tags": tags,
+        "about": user_data.get('about', 'This user has not written a bio yet.'),
     }
 
-    posts = [
-        "Just finished building my first ML model!",
-        "Anyone interested in joining a study group?",
-        "Sharing some resources on sustainable design practices."
-    ]
-
-    communities = [
-        "AI & Machine Learning",
-        "Startup Enthusiasts",
-        "Women in Tech",
-        "Sustainable Living"
-    ]
-
-    reviews = [
-        "Super reliable! Highly recommend.",
-        "Very helpful and responsive.",
-        "Great person to connect with."
-    ]
+    # Fetching real posts for this user (if you have a posts collection)
+    # user_posts = list(mongo.db.posts.find({'author_id': user_id}))
+    # For now, using placeholder data since we just need the profile to open
+    posts = ["User hasn't posted anything recently."]
+    communities = ["Not listed."]
+    reviews = ["No reviews yet."]
 
     return render_template(
         'public_profile.html',

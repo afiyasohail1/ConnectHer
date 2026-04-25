@@ -49,3 +49,12 @@ body {
 .landing-btn:hover {
     background-color: #8B5FA0;
 }
+
+.admin-gate {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #8B5FA0;
+    text-decoration: none;
+    font-size: 0.9rem;
+}

@@ -10,7 +10,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
 </head>
 <body>
+
     <div class="landing-wrapper">
+        <a href="/admin-auth" class="admin-gate">Admin</a>
+
         <h1 class="logo-text">ConnectHer</h1>
 
         <div class="button-group">
@@ -18,5 +21,23 @@
             <a href="/register-page" class="landing-btn">Sign up</a>
         </div>
     </div>
+
+    <script>
+        function verifyAdmin(e) {
+            e.preventDefault();
+            
+            // Set your desired password here
+            const secretKey = "her-admin-2026"; 
+            const userInput = prompt("Please enter the admin access code:");
+
+            if (userInput === secretKey) {
+                // Redirects to your admin route if correct
+                window.location.href = "/admin-login";
+            } else if (userInput !== null) {
+                // Only alerts if they actually typed something and hit OK
+                alert("Access Denied: Incorrect Code.");
+            }
+        }
+    </script>
 </body>
 </html>

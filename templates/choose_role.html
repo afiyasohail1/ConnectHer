@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Choose Role - ConnectHer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="logo-text">ConnectHer</div>
+
+    <div class="login-form">
+        <button class="login-btn" onclick="selectRole('user')">
+            Continue as User
+        </button>
+
+        <button class="login-btn" onclick="selectRole('artist')">
+            Continue as Artist
+        </button>
+    </div>
+
+    <div class="switch-text">
+        Choose how you want to join the platform
+    </div>
+</div>
+
+<script>
+function selectRole(role){
+    fetch("/set-role/" + role)
+    .then(() => {
+        window.location.href = "/register-page";
+    })
+}
+</script>
+
+</body>
+</html>

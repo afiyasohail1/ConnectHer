@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectHer - Admin Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bitcount+Prop+Double+Ink&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #F5E5FF; /* Your signature light purple */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .auth-container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(139, 95, 160, 0.1);
+            width: 350px;
+        }
+
+        .logo-text {
+            font-family: "Bitcount Prop Double Ink", system-ui;
+            font-size: 32px;
+            color: #8B5FA0;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        .key-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #F5E5FF;
+            border-radius: 8px;
+            outline: none;
+            text-align: center;
+            font-size: 1.1rem;
+            color: #8B5FA0;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .key-input:focus {
+            border-color: #A680B8;
+        }
+
+        .submit-btn {
+            margin-top: 20px;
+            background-color: #A680B8;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #8B5FA0;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 15px;
+            color: #A680B8;
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h2 class="logo-text">Admin Portal</h2>
+        <p>Please enter the restricted access key to continue.</p>
+        
+        <input type="password" id="adminKey" class="key-input" placeholder="••••••••">
+        <button onclick="checkKey()" class="submit-btn">Unlock Access</button>
+        
+        <a href="/" class="back-link">Return</a>
+    </div>
+
+    <script>
+        function checkKey() {
+            const key = document.getElementById('adminKey').value;
+            const secret = "her-admin-2026"; // Your secret key
+
+            if (key === secret) {
+                // Redirect to the actual admin login page
+                window.location.href = "/admin-dashboard";
+            } else {
+                alert("Invalid Key. Access Denied.");
+                document.getElementById('adminKey').value = ""; // Clear input
+            }
+        }
+
+        // Allow "Enter" key to submit
+        document.getElementById("adminKey").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkKey();
+            }
+        });
+    </script>
+</body>
+</html>
