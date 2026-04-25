@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Share an Item – ConnectHer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/items.css') }}">
+</head>
+<body>
+
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✦</span>
+      <span class="logo-text">ConnectHer</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="/home">🏠 Home</a></li>
+      <li><a href="/communities">🌸 Communities</a></li>
+      <li class="active"><a href="/items">🛍️ Items</a></li>
+      <li><a href="/dashboard">👤 Profile</a></li>
+      <li><a href="/logout">🚪 Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="main-content">
+    <div class="form-page-wrap">
+
+      <a href="/items" class="back-link">← Back to Items</a>
+
+      <div class="form-header">
+        <h1>Share an Item</h1>
+        <p>List something you'd like to lend to your community 🌸</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="form-card">
+        <form method="POST" action="/items/post" enctype="multipart/form-data">
+
+          <!-- Image Upload -->
+          <div class="image-upload-section">
+            <div class="image-preview-circle" id="imageCircle" onclick="document.getElementById('imageInput').click()">
+              <img id="previewImg" src="" alt="" style="display:none"/>
+              <div class="image-placeholder" id="imagePlaceholder">
+                <span>📷</span>
+                <span>Add Photo</span>
+                <span class="optional-tag">(optional)</span>
+              </div>
+            </div>
+            <input type="file" id="imageInput" name="image" accept="image/*" onchange="previewImage(event)" style="display:none"/>
+            <div class="image-btns">
+              <button type="button" class="btn-upload" onclick="document.getElementById('imageInput').click()">Upload Image</button>
+              <button type="button" class="btn-clear-img" id="clearBtn" onclick="clearImage()" style="display:none">Remove</button>
+            </div>
+          </div>
+
+          <!-- Item Name -->
+          <div class="form-group">
+            <label for="name">Item Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" placeholder="e.g. Blue Silk Scarf, Harry Potter Book…" maxlength="100" required oninput="updateCount('name','nameCount',100)"/>
+            <div class="field-footer">
+              <span></span>
+              <span class="char-count" id="nameCount">0 / 100</span>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label>Category <span class="required">*</span></label>
+            <div class="category-select-grid">
+              <label class="cat-radio">
+                <input type="radio" name="category" value="clothes" required/>
+                <span>👗 Clothes</span>
+              </label>
+              <label class="cat-radio">
+                <input type="radio" name="category" value="jewelry"/>
+                <span>💍 Jewelry</span>
+              </label>
+              <label class="cat-radio">
+                <input type="radio" name="category" value="books"/>
+                <span>📚 Books</span>
+              </label>
+              <label class="cat-radio">
+                <input type="radio" name="category" value="other"/>
+                <span>📦 Other</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description">Description <span class="required">*</span></label>
+            <textarea id="description" name="description" placeholder="Describe the item — size, condition, how long you can lend it…" maxlength="500" required oninput="updateCount('description','descCount',500)"></textarea>
+            <div class="field-footer">
+              <span class="field-hint">Include size, condition, and any lending terms</span>
+              <span class="char-count" id="descCount">0 / 500</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <a href="/items" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-submit">✦ Post Item</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/items.js') }}"></script>
+</body>
+</html>
