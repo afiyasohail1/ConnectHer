@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bitcount+Prop+Double+Ink&display=swap" rel="stylesheet">
     <style>
         body {
-            background-color: #F5E5FF; /* Your signature light purple */
+            background-color: #F5E5FF;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -51,9 +51,34 @@
             transition: border-color 0.3s;
         }
 
-        .key-input:focus {
-            border-color: #A680B8;
+        .key-input:focus { border-color: #A680B8; }
+        
+        /* shake animation for wrong password */
+        .key-input.shake {
+            border-color: #c0392b;
+            animation: shake 0.4s ease;
         }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%       { transform: translateX(-8px); }
+            75%       { transform: translateX(8px); }
+        }
+
+        .error-box {
+            display: none;
+            margin-top: 15px;
+            background: #fdecea;
+            color: #c0392b;
+            border: 1px solid #f5c6c6;
+            border-left: 4px solid #c0392b;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .error-box.visible { display: block; }
 
         .submit-btn {
             margin-top: 20px;
@@ -68,9 +93,7 @@
             transition: background 0.3s;
         }
 
-        .submit-btn:hover {
-            background-color: #8B5FA0;
-        }
+        .submit-btn:hover { background-color: #8B5FA0; }
 
         .back-link {
             display: block;
@@ -88,30 +111,48 @@
         <p>Please enter the restricted access key to continue.</p>
         
         <input type="password" id="adminKey" class="key-input" placeholder="••••••••">
-        <button onclick="checkKey()" class="submit-btn">Unlock Access</button>
         
+        <!-- Error box replaces alert() -->
+        <div class="error-box" id="errorBox">
+            ❌ Invalid key. Access denied. Please try again.
+        </div>
+
+        <button onclick="checkKey()" class="submit-btn">Unlock Access</button>
         <a href="/" class="back-link">Return</a>
     </div>
 
     <script>
         function checkKey() {
             const key = document.getElementById('adminKey').value;
-            const secret = "her-admin-2026"; // Your secret key
+            const secret = "her-admin-2026";
+            const input = document.getElementById('adminKey');
+            const errorBox = document.getElementById('errorBox');
 
             if (key === secret) {
-                // Redirect to the actual admin login page
                 window.location.href = "/admin-dashboard";
             } else {
-                alert("Invalid Key. Access Denied.");
-                document.getElementById('adminKey').value = ""; // Clear input
+                // Show error box
+                errorBox.classList.add('visible');
+                
+                // Shake the input and turn it red
+                input.classList.remove('shake');
+                void input.offsetWidth; // force reflow so animation restarts
+                input.classList.add('shake');
+                input.value = "";
+
+                // Hide error box after 4 seconds
+                setTimeout(() => errorBox.classList.remove('visible'), 4000);
             }
         }
 
-        // Allow "Enter" key to submit
         document.getElementById("adminKey").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                checkKey();
-            }
+            if (event.key === "Enter") checkKey();
+        });
+
+        // Hide error box when user starts typing again
+        document.getElementById("adminKey").addEventListener("input", function() {
+            document.getElementById('errorBox').classList.remove('visible');
+            this.classList.remove('shake');
         });
     </script>
 </body>

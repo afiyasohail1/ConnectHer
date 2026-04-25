@@ -52,6 +52,7 @@
             color: inherit;
             transition: transform 0.2s, box-shadow 0.2s;
             border-left: 4px solid var(--topbar-bg);
+            justify-content: space-between;
         }
 
         .user-card:hover {
@@ -59,6 +60,15 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             border-left-color: var(--sidebar-bg);
         }
+
+        .flash-msg {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .flash-msg.success { background: #e0f2f1; color: #00796b; border-left: 4px solid #00796b; }
+        .flash-msg.error   { background: #fdecea; color: #c0392b; border-left: 4px solid #c0392b; }
 
         .user-avatar {
             width: 50px;
@@ -74,13 +84,74 @@
             flex-shrink: 0;
         }
 
-        .user-info h4 { margin-bottom: 5px; font-size: 1.1rem; color: #222; }
-        .user-info p { font-size: 0.85rem; color: #666; margin-bottom: 8px; word-break: break-all; }
-        
-        .status { font-size: 0.7rem; padding: 4px 8px; border-radius: 12px; text-transform: uppercase; font-weight: bold; }
-        .status.approved { background: #e0f2f1; color: #00796b; }
-        .status.pending { background: #fff3e0; color: #e65100; }
-        .status.none { background: #f0f0f0; color: #666; }
+        .user-card-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+            color: inherit;
+            flex: 1;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .delete-btn:hover {
+            background: #ffe0e0;
+        }
+
+        /* Delete Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 35px 30px;
+            width: 380px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .modal-box .modal-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .modal-box h3 { font-size: 1.2rem; margin-bottom: 8px; color: #222; }
+        .modal-box p { font-size: 0.88rem; color: #888; margin-bottom: 25px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: center; }
+        .btn-cancel {
+            padding: 10px 24px; border-radius: 8px; border: 1px solid #ddd;
+            background: white; cursor: pointer; font-size: 0.9rem; color: #555;
+            transition: 0.2s;
+        }
+        .btn-cancel:hover { background: #f5f5f5; }
+        .btn-delete {
+            padding: 10px 24px; border-radius: 8px; border: none;
+            background: #ff5c5c; color: white; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; transition: 0.2s;
+        }
+        .btn-delete:hover { background: #e04444; }
+
+                .user-info h4 { margin-bottom: 5px; font-size: 1.1rem; color: #222; }
+                .user-info p { font-size: 0.85rem; color: #666; margin-bottom: 8px; word-break: break-all; }
+                
+                .status { font-size: 0.7rem; padding: 4px 8px; border-radius: 12px; text-transform: uppercase; font-weight: bold; }
+                .status.approved { background: #e0f2f1; color: #00796b; }
+                .status.pending { background: #fff3e0; color: #e65100; }
+                .status.none { background: #f0f0f0; color: #666; }
     </style>
 </head>
 <body>
@@ -106,6 +177,14 @@
         </div>
 
         <div class="dashboard-padding">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="flash-msg {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             <div class="header-flex">
                 <div>
                     <h1>Registered Users</h1>
@@ -115,16 +194,28 @@
 
             <div class="users-grid">
                 {% for user in users %}
-                <a href="{{ url_for('public_profile', user_id=user._id) }}" class="user-card">
-                    <div class="user-avatar">
-                        {{ (user.full_name or user.username or '?')[0] | upper }}
-                    </div>
-                    <div class="user-info">
-                        <h4>{{ user.full_name or user.username or 'Unnamed User' }}</h4>
-                        <p>{{ user.email }}</p>
-                        <span class="status {{ user.status or 'none' }}">{{ user.status or 'Registered' }}</span>
-                    </div>
-                </a>
+                <div class="user-card">
+                    <a href="{{ url_for('public_profile', user_id=user._id) }}" style="display:flex; align-items:center; gap:15px; text-decoration:none; color:inherit; flex:1;">
+        <div class="user-avatar">
+            {{ (user.full_name or user.username or '?')[0] | upper }}
+        </div>
+        <div class="user-info">
+            <h4>{{ user.full_name or user.username or 'Unnamed User' }}</h4>
+            <p>{{ user.email }}</p>
+            <span class="status {{ user.status or 'none' }}">{{ user.status or 'Registered' }}</span>
+        </div>
+    </a>
+    <button 
+        class="delete-btn" 
+        onclick="openDeleteModal('{{ user._id }}', '{{ user.full_name or user.username or 'User' }}')"
+        style="background:none; border:none; cursor:pointer; color:#ff5c5c; font-size:1.2rem; padding:5px; flex-shrink:0;"
+        title="Delete user">🗑️
+    </button>
+                    <!-- <form action="{{ url_for('delete_user', user_id=user._id) }}" method="POST"
+                        onsubmit="return confirm('Delete this user? This cannot be undone.')">
+                        <button type="submit" class="delete-btn">🗑</button>
+                    </form> -->
+                </div>
                 {% else %}
                 <div style="grid-column: 1 / -1; text-align: center; color: #888; padding: 40px; background: white; border-radius: 8px;">
                     No users found in the database.
@@ -133,6 +224,35 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <div class="modal-icon">⚠️</div>
+        <h3>Delete User?</h3>
+        <p id="modalMessage">This action cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <form id="deleteForm" method="POST" action="">
+                <button type="submit" class="btn-delete">Yes, Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openDeleteModal(userId, userName) {
+        document.getElementById('modalMessage').textContent = `Are you sure you want to delete "${userName}"? This cannot be undone.`;
+        document.getElementById('deleteForm').action = `/admin/delete-user/${userId}`;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+    }
+    // Close if clicking outside the box
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+</script>
 
 </body>
 </html>

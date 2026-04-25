@@ -4,19 +4,20 @@ from community_routes import community_bp
 import random
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
-app.register_blueprint(items_bp)        # add below the community blueprint line
 
 # Secret key (needed for session/login to work)
 app.secret_key = 'connecther-secret-key'
 
 # MongoDB connection
 #app.config["MONGO_URI"] = "mongodb://localhost:27017/connecther"
-app.config["MONGO_URI"] = "mongodb://admin:connect123@cluster0-shard-00-00.eg0o1rm.mongodb.net:27017,cluster0-shard-00-01.eg0o1rm.mongodb.net:27017,cluster0-shard-00-02.eg0o1rm.mongodb.net:27017/connecther?ssl=true&replicaSet=atlas-shard-0&authSource=admin&retryWrites=true&w=majority"
+app.config["MONGO_URI"] = "mongodb+srv://admin:connect123@cluster0.eg0o1rm.mongodb.net/connecther?retryWrites=true&w=majority"
 mongo = PyMongo(app)
 
-uni_db_uri = "mongodb://nigarishnavaid0_db_user:hello123@cluster0-shard-00-00.3frl0uo.mongodb.net:27017,cluster0-shard-00-01.3frl0uo.mongodb.net:27017,cluster0-shard-00-02.3frl0uo.mongodb.net:27017/ConnectHer?ssl=true&replicaSet=atlas-shard-0&authSource=admin&retryWrites=true&w=majority"
+# uni_db_uri = "mongodb://nigarishnavaid0_db_user:hello123@cluster0-shard-00-00.3frl0uo.mongodb.net:27017,cluster0-shard-00-01.3frl0uo.mongodb.net:27017,cluster0-shard-00-02.3frl0uo.mongodb.net:27017/ConnectHer?ssl=true&replicaSet=atlas-shard-0&authSource=admin&retryWrites=true&w=majority"
+uni_db_uri = "mongodb+srv://nigarishnavaid0_db_user:hello123@cluster0.3frl0uo.mongodb.net/ConnectHer?retryWrites=true&w=majority"
 uni_mongo = PyMongo(app, uri=uni_db_uri)
 
 # Register your blueprint
@@ -50,6 +51,16 @@ def admin_users():
     all_users = list(mongo.db.users.find())
     return render_template('admin_users.html', users=all_users)
 
+@app.route('/admin/delete-user/<user_id>', methods=['POST'])
+def delete_user(user_id):
+    try:
+        mongo.db.users.delete_one({'_id': ObjectId(user_id)})
+        flash('User deleted successfully.', 'success')
+    except Exception as e:
+        flash(f'Error deleting user: {str(e)}', 'error')
+    return redirect(url_for('admin_users'))
+
+    
 @app.route('/register-page')
 def register_page():
     # This shows the actual form we built earlier
