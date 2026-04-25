@@ -73,7 +73,7 @@
     <section id="tab-all" class="tab-section active">
       <div class="items-grid" id="itemsGrid">
         {% for item in items %}
-        {% if item.status == 'available' and item.owner_id != session_user_id %}
+        {% if item.status == 'available' %}
         <div class="item-card" data-name="{{ item.name|lower }}" data-category="{{ item.category|lower }}">
           <div class="item-img-wrap">
             {% if item.image_url %}
@@ -99,7 +99,9 @@
           <div class="item-footer">
 
             <span class="status-badge available">Available</span>
-            {% if item._id|string in requested_ids %}
+            {% if item.owner_id == session_user_id %}
+              <button class="btn-owned" disabled>Your Listing</button>
+            {% elif item._id|string in requested_ids %}
               <button class="btn-requested" disabled>✓ Requested</button>
             {% else %}
               <form method="POST" action="/items/{{ item._id }}/request" style="display:inline">
