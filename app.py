@@ -144,7 +144,7 @@ def login():
             return redirect(url_for('login'))
 
         session['user_id'] = str(user['_id'])
-        
+        session['username'] = user.get('username', 'User')
         # Store the user's actual data in the session
         session['user'] = {
             "name": user.get('username', 'New User'),
