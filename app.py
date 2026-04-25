@@ -489,8 +489,112 @@ def public_profile(user_id):
 @app.route('/fake-login')
 def fake_login():
     session['user_id'] = 'test_user'
+    session['is_admin'] = True
     return redirect('/dashboard')
 
+
+# Report post
+@app.route('/posts/<post_id>/report', methods=['POST'])
+def report_post(post_id):
+
+    from flask import request, session, redirect
+
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    reason = request.form.get('reason', 'Not specified')
+
+    mongo.db.reports.insert_one({
+        "post_id": post_id,
+        "reported_by": session['user_id'],
+        "reason": reason,
+        "status": "pending"
+    })
+
+    return redirect(request.referrer)
+
+# Admin dashboard to view reports
+@app.route('/admin/reports')
+def admin_reports():
+
+    reports = list(mongo.db.reports.find())
+
+    return render_template('admin_reports.html', reports=reports)
+
+from bson.objectid import ObjectId
+
+@app.route('/admin/delete-post', methods=['POST'])
+def admin_delete_post():
+
+    post_id = request.form['post_id']
+
+    mongo.db.posts.delete_one({"_id": ObjectId(post_id)})
+
+    # Also update report status
+    mongo.db.reports.update_many(
+        {"post_id": post_id},
+        {"$set": {"status": "deleted"}}
+    )
+
+    return redirect('/admin/reports')
+
+# Resolved report
+@app.route('/admin/resolve-report', methods=['POST'])
+def resolve_report():
+
+    report_id = request.form['report_id']
+
+    mongo.db.reports.update_one(
+        {"_id": ObjectId(report_id)},
+        {"$set": {"status": "resolved"}}
+    )
+
+    return redirect('/admin/dashboard')
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+
+    from bson.objectid import ObjectId
+
+    # Get reported posts
+    reports = list(mongo.db.reports.find({"status": "pending"}))
+
+    # Get pending communities
+    communities = list(mongo.db.communities.find({"status": "pending"}))
+
+    return render_template(
+        'admin_dashboard.html',
+        reports=reports,
+        communities=communities
+    )
+@app.route('/admin/approve-community', methods=['POST'])
+def approve_community():
+
+    community_id = request.form['community_id']
+
+    mongo.db.communities.update_one(
+        {"_id": ObjectId(community_id)},
+        {"$set": {"status": "approved"}}
+    )
+
+    return redirect('/admin/dashboard')
+
+@app.route('/admin/delete-community', methods=['POST'])
+def delete_community():
+
+    community_id = request.form['community_id']
+
+    mongo.db.communities.delete_one(
+        {"_id": ObjectId(community_id)}
+    )
+
+    return redirect('/admin/dashboard')
+
+# @app.route('/make-admin')
+# def make_admin():
+#     session['user_id'] = 'admin123'
+#     session['is_admin'] = True
+#     return "Now you are admin"
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Reports</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        body {
+            background: #f3edf7;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #5e3a87;
+        }
+
+        .report-card {
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .post-id {
+            font-size: 13px;
+            color: gray;
+        }
+
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.pending {
+            background: #ffe9cc;
+            color: #d17a00;
+        }
+
+        .status.resolved {
+            background: #d4f8e8;
+            color: #0a8f5b;
+        }
+
+        .report-body {
+            margin-top: 10px;
+            font-size: 15px;
+        }
+
+        .report-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-delete {
+            background: #ff4d4d;
+            color: white;
+        }
+
+        .btn-resolve {
+            background: #6c5ce7;
+            color: white;
+        }
+
+        .empty {
+            text-align: center;
+            color: gray;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="title">🚩 Reported Posts</div>
+
+    {% if reports %}
+
+        {% for report in reports %}
+        <div class="report-card">
+
+            <div class="report-header">
+                <div class="post-id">Post ID: {{ report.post_id }}</div>
+                <div class="status {{ report.status }}">{{ report.status }}</div>
+            </div>
+
+            <div class="report-body">
+                <b>Reason:</b> {{ report.reason }}
+            </div>
+
+            <div class="report-actions">
+
+                <!-- DELETE -->
+                <form method="POST" action="/admin/delete-post">
+                    <input type="hidden" name="post_id" value="{{ report.post_id }}">
+                    <button class="btn btn-delete">Delete</button>
+                </form>
+
+                <!-- RESOLVE -->
+                <form method="POST" action="/admin/resolve-report">
+                    <input type="hidden" name="report_id" value="{{ report._id }}">
+                    <button class="btn btn-resolve">Mark Resolved</button>
+                </form>
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="empty">No reports yet 🌸</div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

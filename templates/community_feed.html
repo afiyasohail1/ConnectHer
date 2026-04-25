@@ -155,7 +155,17 @@
             <!-- Report (only for other people's posts) -->
             {% if post.author_id != session_user_id %}
             <form method="POST" action="/posts/{{ post._id }}/report" style="display:inline; margin-left:auto">
-              <button type="submit" class="action-btn report-btn" title="Report post">🚩 Report</button>
+              
+              <input type="hidden" name="post_id" value="{{ post._id }}">
+
+              <select name="reason" required class="report-select">
+                <option value="">Reason</option>
+                <option value="Spam">Spam</option>
+                <option value="Abuse">Abuse</option>
+                <option value="Inappropriate">Inappropriate</option>
+              </select>
+
+              <button type="submit" class="action-btn report-btn">🚩Report</button>
             </form>
             {% endif %}
 

@@ -268,7 +268,7 @@ def create_community():
             image_url = f"/static/uploads/{filename}"
 
         # Status depends on who is creating
-        status = 'active' 
+        status = 'active' if is_admin else 'pending'
 
         db.communities.insert_one({
             'name':            name,
@@ -280,7 +280,7 @@ def create_community():
             'created_by':      user_id,
             'created_by_name': session.get('username', 'Unknown'),
             'created_at':      datetime.utcnow(),
-            'member_count':    0
+            'member_count':    0,
         })
 
         
