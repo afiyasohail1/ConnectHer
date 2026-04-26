@@ -44,20 +44,20 @@ def landing():
 def admin_auth():
     return render_template('admin_auth.html')
 
-@app.route('/admin-dashboard')
-def admin_dashboard():
-    # In a real app, you'd check for a session/cookie here to ensure the user actually entered the key
-    total_users = mongo.db.users.count_documents({'status' : 'approved'})
-    pending_users = mongo.db.users.count_documents({'status': 'pending'})
-    active_borrows = mongo.db.items.count_documents({'status': 'borrowed'}) if 'items' in mongo.db.list_collection_names() else 0
-    flagged_reports = mongo.db.reports.count_documents({'resolved': False}) if 'reports' in mongo.db.list_collection_names() else 0
+# @app.route('/admin-dashboard')
+# def admin_dashboard():
+#     # In a real app, you'd check for a session/cookie here to ensure the user actually entered the key
+#     total_users = mongo.db.users.count_documents({'status' : 'approved'})
+#     pending_users = mongo.db.users.count_documents({'status': 'pending'})
+#     active_borrows = mongo.db.items.count_documents({'status': 'borrowed'}) if 'items' in mongo.db.list_collection_names() else 0
+#     flagged_reports = mongo.db.reports.count_documents({'resolved': False}) if 'reports' in mongo.db.list_collection_names() else 0
 
-    return render_template('admin_dashboard.html',
-        total_users=total_users,
-        pending_users=pending_users,
-        active_borrows=active_borrows,
-        flagged_reports=flagged_reports
-    )
+#     return render_template('admin_dashboard.html',
+#         total_users=total_users,
+#         pending_users=pending_users,
+#         active_borrows=active_borrows,
+#         flagged_reports=flagged_reports
+#     )
 
 @app.route('/admin/users')
 def admin_users():
