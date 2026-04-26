@@ -538,15 +538,21 @@ def admin_delete_post():
 
     post_id = request.form['post_id']
 
-    mongo.db.posts.delete_one({"_id": ObjectId(post_id)})
+    result = mongo.db.posts.delete_one({"_id": ObjectId(post_id)})
 
-    # Also update report status
+    # ✅ CHECK IF POST ALREADY DELETED
+    if result.deleted_count == 0:
+        flash("This post has already been removed", "error")
+        return redirect('/admin/dashboard')
+
+    # Update reports
     mongo.db.reports.update_many(
         {"post_id": post_id},
         {"$set": {"status": "deleted"}}
     )
 
-    return redirect('/admin/reports')
+    flash("Post deleted successfully", "success")
+    return redirect('/admin/dashboard')
 
 # Resolved report
 @app.route('/admin/resolve-report', methods=['POST'])
@@ -601,6 +607,11 @@ def delete_community():
         {"_id": ObjectId(community_id)}
     )
 
+    mongo.db.posts.delete_many({
+        "community_id": ObjectId(community_id)
+    })
+
+    flash("Community and its posts deleted", "success")
     return redirect('/admin/dashboard')
 
 # @app.route('/make-admin')
