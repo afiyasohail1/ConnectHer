@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ConnectHer - Borrowed Items</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #8B5FA0;
+            --sidebar-hover: #7a528d;
+            --topbar-bg: #A680B8;
+            --body-bg: #f8f9fc;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { display: flex; background: var(--body-bg); height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 250px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+        .sidebar-header { padding: 0 20px 30px; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-menu { list-style: none; margin-top: 20px; }
+        .menu-label { padding: 10px 20px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; }
+        .sidebar-menu li a { padding: 12px 20px; display: block; color: white; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: var(--sidebar-hover); }
+
+        /* Main */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-bar { height: 60px; background: var(--topbar-bg); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; color: white; flex-shrink: 0; }
+        .dashboard-padding { padding: 30px; }
+
+        /* Summary bar */
+        .summary-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 18px 25px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--topbar-bg);
+        }
+        .summary-bar .count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--sidebar-bg);
+        }
+        .summary-bar .label { font-size: 0.9rem; color: #666; }
+
+        /* Table */
+        .table-wrap {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #f4eef9; }
+        thead th { padding: 14px 20px; text-align: left; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: #8B5FA0; font-weight: 600; }
+        tbody tr { border-top: 1px solid #f0f0f0; transition: background 0.15s; }
+        tbody tr:hover { background: #faf7fc; }
+        td { padding: 16px 20px; font-size: 0.88rem; color: #333; vertical-align: middle; }
+
+        /* Item cell */
+        .item-cell { display: flex; align-items: center; gap: 12px; }
+        .item-thumb {
+            width: 44px; height: 44px; border-radius: 8px;
+            object-fit: cover; background: #f0e6f5;
+            flex-shrink: 0;
+        }
+        .item-thumb-placeholder {
+            width: 44px; height: 44px; border-radius: 8px;
+            background: #f0e6f5; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 1.2rem; flex-shrink: 0;
+        }
+        .item-name { font-weight: 600; color: #222; }
+        .item-cat { font-size: 0.78rem; color: #999; margin-top: 2px; }
+
+        /* User pill */
+        .user-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #f4eef9; border-radius: 20px;
+            padding: 5px 12px 5px 5px;
+            text-decoration: none; color: inherit;
+            transition: background 0.2s;
+        }
+        .user-pill:hover { background: #e8dcf5; }
+        .user-pill .avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--sidebar-bg); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: bold;
+        }
+        .user-pill span { font-size: 0.85rem; font-weight: 500; }
+
+        /* Date */
+        .date-text { font-size: 0.82rem; color: #888; }
+
+        /* Badge */
+        .badge-borrowed {
+            background: #fff3e0; color: #e65100;
+            padding: 4px 10px; border-radius: 12px;
+            font-size: 0.72rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+
+        /* Empty */
+        .empty-state {
+            text-align: center; padding: 70px 20px;
+            color: #aaa;
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 15px; }
+        .empty-state p { font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">ConnectHer</div>
+    <ul class="sidebar-menu">
+        <li class="menu-label">Overview</li>
+        <li><a href="/admin-dashboard">Main Dashboard</a></li>
+        <li class="menu-label">User Management</li>
+        <li><a href="/admin/users">User Profiles</a></li>
+        <li><a href="/admin/approvals">User Approvals</a></li>
+        <li class="menu-label">Moderation</li>
+        <li><a href="#">Reported Items</a></li>
+        <li><a href="/admin/borrowed-items" class="active">Borrowed Items</a></li>
+        <li><a href="/admin/logout">Logout</a></li>
+    </ul>
+</div>
+
+<div class="main-content">
+    <div class="top-bar">
+        <div>Dashboard / Borrowed Items</div>
+        <div style="font-weight: bold;">Admin</div>
+    </div>
+
+    <div class="dashboard-padding">
+        <div style="margin-bottom: 25px;">
+            <h1>Borrowed Items</h1>
+            <p style="color: #888; margin-top: 5px;">All items currently out on loan.</p>
+        </div>
+
+        <div class="summary-bar">
+            <div class="count">{{ borrows | length }}</div>
+            <div class="label">item(s) actively borrowed right now</div>
+        </div>
+
+        <div class="table-wrap">
+            {% if borrows %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Borrowed By</th>
+                        <th>Owner</th>
+                        <th>Approved On</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in borrows %}
+                    <tr>
+                        <td>
+                            <div class="item-cell">
+                                {% if b.item_image %}
+                                <img src="{{ b.item_image }}" class="item-thumb" alt="{{ b.item_name }}">
+                                {% else %}
+                                <div class="item-thumb-placeholder">📦</div>
+                                {% endif %}
+                                <div>
+                                    <div class="item-name">{{ b.item_name }}</div>
+                                    <div class="item-cat">{{ b.item_category }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="/public-profile/{{ b.borrower_id }}" class="user-pill">
+                                <div class="avatar">{{ b.borrower_name[0] | upper }}</div>
+                                <span>{{ b.borrower_name }}</span>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/public-profile/{{ b.owner_id_str }}" class="user-pill">
+                                <div class="avatar">{{ b.owner_name[0] | upper }}</div>
+                                <span>{{ b.owner_name }}</span>
+                            </a>
+                        </td>
+                        <td>
+                            <div class="date-text">
+                                {% if b.approved_at %}
+                                    {{ b.approved_at.strftime('%d %b %Y, %I:%M %p') if b.approved_at is not string else b.approved_at }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td><span class="badge-borrowed">● Active</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <p>No items are currently borrowed.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ConnectHer - User Approvals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #8B5FA0;
+            --sidebar-hover: #7a528d;
+            --topbar-bg: #A680B8;
+            --body-bg: #f8f9fc;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { display: flex; background: var(--body-bg); height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 250px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; padding: 20px 0; }
+        .sidebar-header { padding: 0 20px 30px; font-size: 1.5rem; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-menu { list-style: none; margin-top: 20px; }
+        .menu-label { padding: 10px 20px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; }
+        .sidebar-menu li a { padding: 12px 20px; display: block; color: white; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: var(--sidebar-hover); }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-bar { height: 60px; background: var(--topbar-bg); display: flex; justify-content: space-between; align-items: center; padding: 0 30px; color: white; }
+        .dashboard-padding { padding: 30px; }
+
+        .approval-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px 25px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #A680B8;
+        }
+        .user-avatar {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: #f0e6f5; color: #8B5FA0;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.4rem; font-weight: bold; flex-shrink: 0;
+        }
+        .user-info { flex: 1; }
+        .user-info h4 { font-size: 1rem; color: #222; margin-bottom: 4px; }
+        .user-info p { font-size: 0.85rem; color: #888; }
+
+        .action-btns { display: flex; gap: 10px; }
+        .btn-approve {
+            padding: 9px 20px; border-radius: 8px; border: none;
+            background: #8B5FA0; color: white; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .btn-approve:hover { background: #7a528d; }
+        .btn-reject {
+            padding: 9px 20px; border-radius: 8px; border: none;
+            background: #fff0f0; color: #ff5c5c; font-weight: 600;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+            border: 1px solid #ffcccc;
+        }
+        .btn-reject:hover { background: #ffe0e0; }
+
+        .empty-state {
+            text-align: center; padding: 60px; background: white;
+            border-radius: 10px; color: #aaa;
+        }
+        .empty-state div { font-size: 3rem; margin-bottom: 15px; }
+
+        .flash-success {
+            background: #e0f2f1; color: #00796b; padding: 12px 20px;
+            border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">ConnectHer</div>
+    <ul class="sidebar-menu">
+        <li class="menu-label">Overview</li>
+        <li><a href="/admin-dashboard">Main Dashboard</a></li>
+        <li class="menu-label">User Management</li>
+        <li><a href="/admin/users">User Profiles</a></li>
+        <li><a href="/admin/approvals" class="active">User Approvals</a></li>
+        <li class="menu-label">Moderation</li>
+        <li><a href="#">Reported Items</a></li>
+        <li><a href="/admin/borrowed-items">Borrowed Items</a></li>
+        <li><a href="/admin/logout">Logout</a></li>
+    </ul>
+</div>
+
+<div class="main-content">
+    <div class="top-bar">
+        <div>Dashboard / User Approvals</div>
+        <div style="font-weight: bold;">Admin</div>
+    </div>
+
+    <div class="dashboard-padding">
+        <div style="margin-bottom: 30px;">
+            <h1>Pending Approvals</h1>
+            <p style="color: #888; margin-top: 5px;">Review and approve or reject new registration requests.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+            <div class="flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endwith %}
+
+        {% for user in users %}
+        <div class="approval-card">
+            <div class="user-avatar">
+                {{ (user.full_name or user.username or '?')[0] | upper }}
+            </div>
+            <div class="user-info">
+                <h4>{{ user.full_name or user.username or 'Unnamed User' }}</h4>
+                <p>{{ user.email }}</p>
+            </div>
+            <div class="action-btns">
+                <form method="POST" action="/admin/approve-user/{{ user._id }}">
+                    <button type="submit" class="btn-approve">✓ Approve</button>
+                </form>
+                <form method="POST" action="/admin/reject-user/{{ user._id }}">
+                    <button type="submit" class="btn-reject">✕ Reject</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div>🎉</div>
+            <p>No pending approvals. You're all caught up!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+</body>
+</html>

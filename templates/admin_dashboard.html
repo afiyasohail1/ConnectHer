@@ -120,10 +120,11 @@
             <li><a href="#" class="active">Main Dashboard</a></li>
             <li class="menu-label">User Management</li>
             <li><a href="/admin/users">User Profiles</a></li>
-            <li><a href="#">User Approvals</a></li>
+            <li><a href="/admin/approvals">User Approvals</a></li>
             <li class="menu-label">Moderation</li>
             <li><a href="#">Reported Items</a></li>
-            <li><a href="#">Borrowed Items</a></li>
+            <li><a href="/admin/borrowed-items">Borrowed Items</a></li>
+            <li><a href="/admin/logout">Logout</a></li>
         </ul>
     </div>
 
@@ -142,26 +143,31 @@
                 <div id="current-date" style="font-size: 0.85rem; color: #666;"></div>
             </div>
 
+            {% if pending_users > 0 or flagged_reports > 0 %}
             <div class="alert-banner">
                 <span style="margin-right: 10px;">⚠️</span>
-                3 new item reports require immediate review. 5 borrow requests are pending admin approval.
+                {% if pending_users > 0 %}{{ pending_users }} user approval(s) are waiting for your review. {% endif %}
+                {% if flagged_reports > 0 %}{{ flagged_reports }} report(s) require immediate attention.{% endif %}
             </div>
+            {% endif %}
 
             <div class="stats-grid">
                 <div class="stat-card">
                     <p>Total Registered Users</p>
-                    <h3>1,248</h3>
-                    <span style="color: green; font-size: 0.8rem;">↑ 34 this week</span>
+                    <h3>{{ total_users }}</h3>
+                    <span style="color: #8B5FA0; font-size: 0.8rem;">
+                        {% if pending_users > 0 %}⏳ {{ pending_users }} pending approval{% else %}✓ All approved{% endif %}
+                    </span>
                 </div>
                 <div class="stat-card">
                     <p>Active Borrows</p>
-                    <h3>87</h3>
-                    <span style="color: orange; font-size: 0.8rem;">⚠️ 5 overdue</span>
+                    <h3>{{ active_borrows }}</h3>
+                    <span style="color: orange; font-size: 0.8rem;">Live from database</span>
                 </div>
                 <div class="stat-card red">
                     <p>Flagged Reports</p>
-                    <h3>11</h3>
-                    <span style="color: red; font-size: 0.8rem;">● 3 new today</span>
+                    <h3>{{ flagged_reports }}</h3>
+                    <span style="color: red; font-size: 0.8rem;">{% if flagged_reports > 0 %}● Needs attention{% else %}✓ All clear{% endif %}</span>
                 </div>
             </div>
         </div>

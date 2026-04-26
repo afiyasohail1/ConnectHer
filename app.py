@@ -45,7 +45,17 @@ def admin_auth():
 @app.route('/admin-dashboard')
 def admin_dashboard():
     # In a real app, you'd check for a session/cookie here to ensure the user actually entered the key
-    return render_template('admin_dashboard.html')
+    total_users = mongo.db.users.count_documents({'status' : 'approved'})
+    pending_users = mongo.db.users.count_documents({'status': 'pending'})
+    active_borrows = mongo.db.items.count_documents({'status': 'borrowed'}) if 'items' in mongo.db.list_collection_names() else 0
+    flagged_reports = mongo.db.reports.count_documents({'resolved': False}) if 'reports' in mongo.db.list_collection_names() else 0
+
+    return render_template('admin_dashboard.html',
+        total_users=total_users,
+        pending_users=pending_users,
+        active_borrows=active_borrows,
+        flagged_reports=flagged_reports
+    )
 
 @app.route('/admin/users')
 def admin_users():
@@ -61,6 +71,48 @@ def delete_user(user_id):
     except Exception as e:
         flash(f'Error deleting user: {str(e)}', 'error')
     return redirect(url_for('admin_users'))
+
+@app.route('/admin/approvals')
+def admin_approvals():
+    pending_users = list(mongo.db.users.find({'status': 'pending'}))
+    return render_template('admin_approvals.html', users=pending_users)
+
+@app.route('/admin/borrowed-items')
+def admin_borrowed_items():
+    db = mongo.db
+
+    # Get all approved borrow requests
+    active_borrows = list(db.borrow_requests.find({'status': 'approved'}).sort('approved_at', -1))
+
+    # Enrich each borrow with item + borrower + owner info
+    for borrow in active_borrows:
+        item = db.items.find_one({'_id': borrow['item_id']})
+        borrower = db.users.find_one({'_id': ObjectId(borrow['requester_id'])})
+        owner = db.users.find_one({'_id': ObjectId(borrow['owner_id'])}) if borrow.get('owner_id') else None
+
+        borrow['item_name']     = item.get('name', 'Unknown Item') if item else 'Deleted Item'
+        borrow['item_image']    = item.get('image_url') if item else None
+        borrow['item_category'] = item.get('category', '') if item else ''
+        borrow['borrower_name'] = borrower.get('full_name') or borrower.get('username', 'Unknown') if borrower else 'Unknown'
+        borrow['borrower_id']   = str(borrow['requester_id'])
+        borrow['owner_name']    = owner.get('full_name') or owner.get('username', 'Unknown') if owner else 'Unknown'
+        borrow['owner_id_str']  = str(borrow['owner_id']) if borrow.get('owner_id') else ''
+        borrow['approved_at']   = borrow.get('approved_at', borrow.get('created_at', ''))
+
+    return render_template('admin_borrowed_items.html', borrows=active_borrows)
+
+
+@app.route('/admin/approve-user/<user_id>', methods=['POST'])
+def approve_user(user_id):
+    mongo.db.users.update_one({'_id': ObjectId(user_id)}, {'$set': {'status': 'approved'}})
+    flash('User approved successfully.', 'success')
+    return redirect(url_for('admin_approvals'))
+
+@app.route('/admin/reject-user/<user_id>', methods=['POST'])
+def reject_user(user_id):
+    mongo.db.users.delete_one({'_id': ObjectId(user_id)})
+    flash('User rejected and removed.', 'success')
+    return redirect(url_for('admin_approvals'))
 
     
 @app.route('/register-page')
@@ -177,11 +229,11 @@ def verify_otp():
                 'username': temp_user['full_name'],  # Set username to full name initially
                 'cnic': temp_user['cnic'], # This will be the "00000..." string
                 'password': hashed_password,
-                'status': 'approved'
+                'status': 'pending'
             })
             
             session.pop('temp_user', None)
-            flash("Your request has been approved. Click 'Continue' to proceed", 'success')
+            flash("pending", 'pending')
             return redirect(url_for('register_page'))
         else:
             flash('Invalid OTP. Please try again.', 'error')
@@ -232,6 +284,11 @@ def logout():
     session.pop('user_id', None)
     # Optional: Clear everything from session
     # session.clear() 
+    return redirect(url_for('landing'))
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.clear()
     return redirect(url_for('landing'))
 
 @app.route('/seed-data')

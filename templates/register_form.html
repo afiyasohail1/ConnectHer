@@ -23,6 +23,39 @@
             height: 50px;
             animation: spin 1s linear infinite;
         }
+
+        .pending-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .pending-box {
+            background: white;
+            border-radius: 16px;
+            padding: 45px 35px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+        }
+        .pending-icon { font-size: 3rem; margin-bottom: 15px; }
+        .pending-box h3 { font-size: 1.4rem; color: #8B5FA0; margin-bottom: 10px; }
+        .pending-box p { font-size: 0.9rem; color: #666; line-height: 1.6; margin-bottom: 25px; }
+        .pending-box button {
+            padding: 12px 30px;
+            background: #8B5FA0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .pending-box button:hover { background: #7a528d; }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -34,6 +67,20 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
+             {% if category == 'pending' %}
+                <div class="pending-overlay" id="pendingBox">
+                <div class="pending-box">
+                    <div class="pending-icon">⏳</div>
+                    <h3>Request Sent!</h3>
+                    <p>Your registration request has been submitted.<br>Please wait for <strong>admin approval</strong> before logging in.</p>
+                    <button onclick="document.getElementById('pendingBox').style.display='none'">Got it!</button>
+                </div>
+                </div>
+                {% elif category == 'error' %}
+                <div class="flash-error">{{ message }}</div>
+                {% elif category == 'success' %}
+                <div class="flash-success">{{ message }}</div>
+             {% endif %}
               <div id="statusModal" class="modal-overlay">
                 <div class="modal-box">
                   <div class="modal-icon {{ 'icon-success' if category == 'success' else 'icon-error' }}">
