@@ -500,11 +500,17 @@ def fake_login():
 # Report post
 @app.route('/posts/<post_id>/report', methods=['POST'])
 def report_post(post_id):
-
-    from flask import request, session, redirect
-
     if 'user_id' not in session:
         return redirect('/login')
+    from bson.objectid import ObjectId
+
+    post = mongo.db.posts.find_one({"_id": ObjectId(post_id)})
+
+    if post and post.get('author_id') == session['user_id']:
+        flash("You cannot report your own post", "error")
+        return redirect(request.referrer)
+    from flask import request, session, redirect
+
 
     reason = request.form.get('reason', 'Not specified')
 
