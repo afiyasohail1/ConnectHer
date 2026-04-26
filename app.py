@@ -110,8 +110,8 @@ def approve_user(user_id):
 
 @app.route('/admin/reject-user/<user_id>', methods=['POST'])
 def reject_user(user_id):
-    mongo.db.users.delete_one({'_id': ObjectId(user_id)})
-    flash('User rejected and removed.', 'success')
+    mongo.db.users.update_one({'_id': ObjectId(user_id)}, {'$set': {'status': 'rejected'}})
+    flash('User rejected.', 'success')
     return redirect(url_for('admin_approvals'))
 
     
@@ -131,6 +131,10 @@ def login():
         # Use check_password_hash instead of !=
         if not user or not check_password_hash(user['password'], password):
             flash('Incorrect Password or Email', 'error')
+            return redirect(url_for('login'))
+
+        if user.get('status') == 'rejected':
+            flash('Your approval has been rejected.', 'error')
             return redirect(url_for('login'))
 
         if user.get('status') != 'approved':
@@ -179,11 +183,15 @@ def register():
         flash('You are a man!😡', 'error')
         return redirect(url_for('register_page'))
     
-    # 3. Check if user is already registered
+    # 3. Check if user is already registered (but allow rejected users to re-register)
     existing_user = mongo.db.users.find_one({'email': email})
-    if existing_user:
+    if existing_user and existing_user.get('status') != 'rejected':
         flash('User is already registered', 'error')
         return redirect(url_for('register_page'))
+    
+    # If user was rejected, delete the old account to allow re-registration
+    if existing_user and existing_user.get('status') == 'rejected':
+        mongo.db.users.delete_one({'_id': existing_user['_id']})
 
     # Generate a 6-digit OTP
     otp = str(random.randint(100000, 999999))
@@ -464,12 +472,17 @@ def public_profile(user_id):
     communities = ["Not listed."]
     reviews = ["No reviews yet."]
 
+    # Check if accessed from admin side
+    referrer = request.referrer or ''
+    is_admin = '/admin' in referrer
+
     return render_template(
         'public_profile.html',
         user=user,
         posts=posts,
         communities=communities,
-        reviews=reviews
+        reviews=reviews,
+        is_admin=is_admin
     )
 
 # fake login

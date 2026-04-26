@@ -30,7 +30,9 @@
         </div>
 
         <div class="profile-actions">
+            {% if not is_admin %}
             <button class="btn">Send Message</button>
+            {% endif %}
             <button class="btn-outline">Leave Review</button>
         </div>
     </div>
@@ -71,6 +73,7 @@
         </div>
 
         <!-- REVIEWS -->
+        {% if not is_admin %}
         <div class="card">
     <div class="review-header">
         <h3>Ratings & Reviews</h3>
@@ -87,7 +90,8 @@
         </div>
     {% endfor %}
 
-</div>  
+</div>
+        {% endif %}  
 
     </div>
 

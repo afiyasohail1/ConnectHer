@@ -54,7 +54,19 @@ body {
     position: absolute;
     top: 20px;
     right: 20px;
-    color: #8B5FA0;
+    background-color: #8B5FA0;
+    color: white;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 12px 24px;
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s;
+}
+
+.admin-gate:hover {
+    background-color: #6B4580;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
 }
