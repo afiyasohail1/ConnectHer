@@ -135,6 +135,19 @@
         </div>
 
         <div class="dashboard-padding">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                {% if category == 'success' %}
+                <div style="padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; background: #e0f2f1; color: #00796b;">
+                    {{ message }}
+                </div>
+                {% else %}
+                <div style="padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; background: #ffeaea; color: #d00;">
+                    {{ message }}
+                </div>
+                {% endif %}
+            {% endfor %}
+            {% endwith %}
             <div class="header-flex">
                 <div>
                     <h1>Admin Dashboard</h1>
@@ -278,9 +291,9 @@
 
 <div class="container">
 
-    <div class="title">🛠 Admin Dashboard</div>
+    <!-- <div class="title">🛠 Admin Dashboard</div>
 
-    <!-- ================= REPORTS ================= -->
+    ================= REPORTS =================
     <div class="section">
         <div class="section-title">🚩 Reported Posts</div>
 
@@ -308,7 +321,7 @@
         {% else %}
             <div class="empty">No reports yet 🌸</div>
         {% endif %}
-    </div>
+    </div> -->
 
 
     <!-- ================= COMMUNITIES ================= -->
@@ -338,7 +351,7 @@
             <div class="empty">No pending communities 🌸</div>
         {% endif %}
     </div>
-    <div class="section">
+    <!-- <div class="section">
     <div class="section-title">📦 Lending History</div>
 
     {% if lending %}
@@ -354,7 +367,7 @@
     {% else %}
         <div class="empty">No lending records</div>
     {% endif %}
-</div>
+</div> -->
 
 </div>
 

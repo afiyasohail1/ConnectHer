@@ -284,7 +284,7 @@ def create_community():
         })
 
         
-        flash(f'Your community "{name}" is now live! 🌸', 'success')
+        flash(f'Wait for the approval from the admin.', 'success')
         return redirect(url_for('community.communities'))
 
     return render_template('create_community.html', is_admin=is_admin)
@@ -313,36 +313,53 @@ def pending_communities():
 # Admin: Approve a pending community
 # Route: POST /admin/communities/<community_id>/approve
 # ---------------------------------------------------------------------------
-@community_bp.route('/admin/communities/<community_id>/approve', methods=['POST'])
-def approve_community(community_id):
-    if 'user_id' not in session or not session.get('is_admin', False):
-        flash('Admin access only.', 'danger')
-        return redirect(url_for('community.communities'))
+# @community_bp.route('/admin/communities/<community_id>/approve', methods=['POST'])
+# def approve_community(community_id):
+#     if 'user_id' not in session or not session.get('is_admin', False):
+#         flash('Admin access only.', 'danger')
+#         return redirect(url_for('community.communities'))
 
-    db = get_db()
-    db.communities.update_one(
-        {'_id': ObjectId(community_id)},
-        {'$set': {'status': 'active', 'approved_at': datetime.utcnow()}}
-    )
-    flash('Community approved and is now live! ✓', 'success')
-    return redirect(url_for('community.pending_communities'))
+#     db = get_db()
+#     db.communities.update_one(
+#         {'_id': ObjectId(community_id)},
+#         {'$set': {'status': 'active', 'approved_at': datetime.utcnow()}}
+#     )
+#     flash('Community approved and is now live! ✓', 'success')
+#     return redirect(url_for('community.pending_communities'))
 
 
 # ---------------------------------------------------------------------------
 # Admin: Reject a pending community
 # Route: POST /admin/communities/<community_id>/reject
 # ---------------------------------------------------------------------------
+# @community_bp.route('/admin/communities/<community_id>/reject', methods=['POST'])
+# def reject_community(community_id):
+#     if 'user_id' not in session or not session.get('is_admin', False):
+#         flash('Admin access only.', 'danger')
+#         return redirect(url_for('community.communities'))
+
+#     db = get_db()
+#     db.communities.delete_one({'_id': ObjectId(community_id)})
+#     flash('Community request rejected and removed.', 'info')
+#     return redirect(url_for('community.pending_communities'))
+
+@community_bp.route('/admin/communities/<community_id>/approve', methods=['POST'])
+def approve_community(community_id):
+    db = get_db()
+    db.communities.update_one(
+        {'_id': ObjectId(community_id)},
+        {'$set': {'status': 'active', 'approved_at': datetime.utcnow()}}
+    )
+    flash('Community approved and is now live! ✓', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+
 @community_bp.route('/admin/communities/<community_id>/reject', methods=['POST'])
 def reject_community(community_id):
-    if 'user_id' not in session or not session.get('is_admin', False):
-        flash('Admin access only.', 'danger')
-        return redirect(url_for('community.communities'))
-
     db = get_db()
     db.communities.delete_one({'_id': ObjectId(community_id)})
-    flash('Community request rejected and removed.', 'info')
-    return redirect(url_for('community.pending_communities'))
-
+    flash('Community rejected and removed.', 'info')
+    return redirect(url_for('admin_dashboard'))
 
 
 @community_bp.route('/admin/posts/<post_id>/delete', methods=['POST'])

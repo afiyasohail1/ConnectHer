@@ -40,8 +40,17 @@ mail = Mail(app)
 def landing():
     return render_template('landing.html')
 
-@app.route('/admin-auth')
+@app.route('/admin-auth', methods=['GET', 'POST'])
 def admin_auth():
+    if request.method == 'POST':
+        key = request.form.get('admin_key', '').strip()
+        if key == 'connecther-admin-2024':  # change this to whatever your key is
+            session['is_admin'] = True
+            session['user_id'] = 'admin'
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid admin key.', 'error')
+            return redirect(url_for('admin_auth'))
     return render_template('admin_auth.html')
 
 @app.route('/admin_dashboard')
@@ -52,7 +61,7 @@ def admin_dashboard():
     # ===== TOP STATS =====
     total_users = db.users.count_documents({'status': 'approved'})
     pending_users = db.users.count_documents({'status': 'pending'})
-    active_borrows = db.lending.count_documents({'status': 'borrowed'})
+    active_borrows = db.borrow_requests.count_documents({'status': 'approved'})
     flagged_reports = db.reports.count_documents({'status': 'pending'})
 
     # ===== DETAILED DATA =====
@@ -552,8 +561,18 @@ def report_post(post_id):
 # Admin dashboard to view reports
 @app.route('/admin/reports')
 def admin_reports():
+    # Only show pending reports, exclude deleted/resolved
+    reports = list(mongo.db.reports.find({'status': 'pending'}))
 
-    reports = list(mongo.db.reports.find())
+    # Enrich each report with post content and reporter info
+    for report in reports:
+        post = mongo.db.posts.find_one({'_id': ObjectId(report['post_id'])})
+        reporter = mongo.db.users.find_one({'_id': ObjectId(report['reported_by'])}) if report.get('reported_by') else None
+
+        report['post_content'] = post.get('content', '[Post not found]') if post else '[Post already deleted]'
+        report['post_exists']  = post is not None
+        report['reporter_name'] = reporter.get('full_name') or reporter.get('username', 'Unknown') if reporter else 'Unknown'
+        report['reporter_id']   = str(report['reported_by']) if report.get('reported_by') else ''
 
     return render_template('admin_reports.html', reports=reports)
 
@@ -583,17 +602,15 @@ def admin_delete_post():
 # Resolved report
 @app.route('/admin/resolve-report', methods=['POST'])
 def resolve_report():
-
-    if not session.get('is_admin'):
-        return redirect('/')
-
     report_id = request.form.get('report_id')
-
+    if not report_id:
+        flash('Report not found.', 'error')
+        return redirect('/admin/reports')
     mongo.db.reports.update_one(
         {"_id": ObjectId(report_id)},
         {"$set": {"status": "resolved"}}
     )
-
+    flash('Report marked as resolved.', 'success')
     return redirect('/admin/reports')
 # @app.route('/admin/dashboard')
 # def admin_dashboard():
@@ -614,33 +631,6 @@ def resolve_report():
 #         communities=communities,
 #         lending=lending
 #     )
-@app.route('/admin/approve-community', methods=['POST'])
-def approve_community():
-
-    community_id = request.form['community_id']
-
-    mongo.db.communities.update_one(
-        {"_id": ObjectId(community_id)},
-        {"$set": {"status": "approved"}}
-    )
-
-    return redirect('/admin_dashboard')
-
-@app.route('/admin/delete-community', methods=['POST'])
-def delete_community():
-
-    community_id = request.form['community_id']
-
-    mongo.db.communities.delete_one(
-        {"_id": ObjectId(community_id)}
-    )
-
-    mongo.db.posts.delete_many({
-        "community_id": ObjectId(community_id)
-    })
-
-    flash("Community and its posts deleted", "success")
-    return redirect('/admin_dashboard')
 
 # @app.route('/make-admin')
 # def make_admin():
