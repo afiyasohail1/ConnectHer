@@ -44,6 +44,32 @@ def landing():
 def admin_auth():
     return render_template('admin_auth.html')
 
+@app.route('/admin_dashboard')
+def admin_dashboard():
+
+    db = mongo.db
+
+    # ===== TOP STATS =====
+    total_users = db.users.count_documents({'status': 'approved'})
+    pending_users = db.users.count_documents({'status': 'pending'})
+    active_borrows = db.lending.count_documents({'status': 'borrowed'})
+    flagged_reports = db.reports.count_documents({'status': 'pending'})
+
+    # ===== DETAILED DATA =====
+    reports = list(db.reports.find({"status": "pending"}))
+    communities = list(db.communities.find({"status": "pending"}))
+    lending = list(db.lending.find().sort('_id', -1))
+
+    return render_template(
+        'admin_dashboard.html',
+        total_users=total_users,
+        pending_users=pending_users,
+        active_borrows=active_borrows,
+        flagged_reports=flagged_reports,
+        reports=reports,
+        communities=communities,
+        lending=lending
+    )
 # @app.route('/admin-dashboard')
 # def admin_dashboard():
 #     # In a real app, you'd check for a session/cookie here to ensure the user actually entered the key
@@ -543,7 +569,7 @@ def admin_delete_post():
     # ✅ CHECK IF POST ALREADY DELETED
     if result.deleted_count == 0:
         flash("This post has already been removed", "error")
-        return redirect('/admin/dashboard')
+        return redirect('/admin_dashboard')
 
     # Update reports
     mongo.db.reports.update_many(
@@ -552,7 +578,7 @@ def admin_delete_post():
     )
 
     flash("Post deleted successfully", "success")
-    return redirect('/admin/dashboard')
+    return redirect('/admin_dashboard')
 
 # Resolved report
 @app.route('/admin/resolve-report', methods=['POST'])
@@ -565,27 +591,27 @@ def resolve_report():
         {"$set": {"status": "resolved"}}
     )
 
-    return redirect('/admin/dashboard')
+    return redirect('/admin_dashboard')
 
-@app.route('/admin/dashboard')
-def admin_dashboard():
+# @app.route('/admin/dashboard')
+# def admin_dashboard():
 
 
-    # Get reported posts
-    reports = list(mongo.db.reports.find({"status": "pending"}))
+#     # Get reported posts
+#     reports = list(mongo.db.reports.find({"status": "pending"}))
 
-    # Get pending communities
-    communities = list(mongo.db.communities.find({"status": "pending"}))
+#     # Get pending communities
+#     communities = list(mongo.db.communities.find({"status": "pending"}))
 
-    # Get lending requests
-    lending = list(mongo.db.lending.find().sort('_id', -1))
+#     # Get lending requests
+#     lending = list(mongo.db.lending.find().sort('_id', -1))
 
-    return render_template(
-        'admin_dashboard.html',
-        reports=reports,
-        communities=communities,
-        lending=lending
-    )
+#     return render_template(
+#         'admin_dashboard.html',
+#         reports=reports,
+#         communities=communities,
+#         lending=lending
+#     )
 @app.route('/admin/approve-community', methods=['POST'])
 def approve_community():
 
@@ -596,7 +622,7 @@ def approve_community():
         {"$set": {"status": "approved"}}
     )
 
-    return redirect('/admin/dashboard')
+    return redirect('/admin_dashboard')
 
 @app.route('/admin/delete-community', methods=['POST'])
 def delete_community():
@@ -612,7 +638,7 @@ def delete_community():
     })
 
     flash("Community and its posts deleted", "success")
-    return redirect('/admin/dashboard')
+    return redirect('/admin_dashboard')
 
 # @app.route('/make-admin')
 # def make_admin():

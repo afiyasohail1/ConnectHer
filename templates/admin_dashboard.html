@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-<<<<<<< HEAD
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ConnectHer - Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -118,7 +117,7 @@
         <div class="sidebar-header">ConnectHer</div>
         <ul class="sidebar-menu">
             <li class="menu-label">Overview</li>
-            <li><a href="#" class="active">Main Dashboard</a></li>
+            <li><a href="/admin_dashboard" class="active">Main Dashboard</a></li>
             <li class="menu-label">User Management</li>
             <li><a href="/admin/users">User Profiles</a></li>
             <li><a href="/admin/approvals">User Approvals</a></li>
@@ -178,7 +177,6 @@
         const dateOptions = { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-GB', dateOptions);
     </script>
-=======
     <title>Admin Dashboard</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -360,6 +358,5 @@
 
 </div>
 
->>>>>>> a54fbaf (Report button and community access by admin done Alleshba)
 </body>
 </html>
