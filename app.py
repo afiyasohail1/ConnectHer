@@ -578,21 +578,23 @@ def admin_delete_post():
     )
 
     flash("Post deleted successfully", "success")
-    return redirect('/admin_dashboard')
+    return redirect('/admin/reports')
 
 # Resolved report
 @app.route('/admin/resolve-report', methods=['POST'])
 def resolve_report():
 
-    report_id = request.form['report_id']
+    if not session.get('is_admin'):
+        return redirect('/')
+
+    report_id = request.form.get('report_id')
 
     mongo.db.reports.update_one(
         {"_id": ObjectId(report_id)},
         {"$set": {"status": "resolved"}}
     )
 
-    return redirect('/admin_dashboard')
-
+    return redirect('/admin/reports')
 # @app.route('/admin/dashboard')
 # def admin_dashboard():
 
