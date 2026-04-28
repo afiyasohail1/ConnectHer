@@ -416,17 +416,13 @@ def dashboard():
         "comments": comment_count
     }
 
-    # 3. LENDING & RECENT (Keep empty for now as per your request)
-    lending = list(mongo.db.lending.find({
-    "lender": session['user_id']
-    }))
+    # 3. RECENT (Keep empty for now as per your request)
     recent = []
 
     return render_template(
         'dashboard.html',
         user=user,
         activity=activity,
-        lending=lending,
         recent=recent
     )
 
