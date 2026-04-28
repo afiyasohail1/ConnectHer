@@ -212,8 +212,11 @@ def report_post(post_id):
     if existing_report:
         flash('You have already reported this post.', 'info')
         return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
+    
+    reason = request.form.get('reason', 'Not specified')
+    
     db.reports.insert_one({'post_id': ObjectId(post_id), 'reported_by': user_id,
-                           'community_id': post['community_id'], 'reason': 'Reported by user',
+                           'community_id': post['community_id'], 'reason': reason,
                            'status': 'pending', 'created_at': datetime.utcnow()})
     flash('Post reported. Our admin will review it. 🚩', 'info')
     return redirect(url_for('community.community_feed', community_id=str(post['community_id'])))
