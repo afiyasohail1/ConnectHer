@@ -160,14 +160,22 @@ def register_page():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email').strip().lower()
+        identifier = request.form.get('email').strip()
         password = request.form.get('password').strip()
 
-        user = mongo.db.users.find_one({'email': email})
+        # Normalize phone entry by keeping only digits
+        normalized_phone = ''.join(ch for ch in identifier if ch.isdigit())
+        query = {'$or': []}
+        if '@' in identifier:
+            query['$or'].append({'email': identifier.lower()})
+        if normalized_phone:
+            query['$or'].append({'phone_number': normalized_phone})
+
+        user = mongo.db.users.find_one(query) if query['$or'] else None
 
         # Use check_password_hash instead of !=
         if not user or not check_password_hash(user['password'], password):
-            flash('Incorrect Password or Email', 'error')
+            flash('Incorrect Password or Email/Phone', 'error')
             return redirect(url_for('login'))
 
         if user.get('status') == 'rejected':
@@ -198,6 +206,7 @@ def register():
     email = request.form.get('email')
     full_name = request.form.get('full_name')
     password = request.form.get('password')
+    phone_number = request.form.get('phone_number')
 
     # 1. Check for HU Email
     if not email.lower().endswith('@st.habib.edu.pk'):
@@ -207,6 +216,15 @@ def register():
     # 2. Check Full Name
     if not full_name or len(full_name.strip()) < 2:
         flash('Please enter your valid Full Name', 'error')
+        return redirect(url_for('register_page'))
+
+    # 3. Check Phone Number
+    if not phone_number or len(phone_number.strip()) < 7:
+        flash('Please enter a valid Phone Number', 'error')
+        return redirect(url_for('register_page'))
+    phone_number = ''.join(ch for ch in phone_number if ch.isdigit())
+    if len(phone_number) < 7:
+        flash('Please enter a valid Phone Number', 'error')
         return redirect(url_for('register_page'))
 
     official_record = uni_mongo.db.Uni_directory.find_one({'email': email})
@@ -237,6 +255,7 @@ def register():
     session['temp_user'] = {
         'email': email,
         'full_name': full_name,
+        'phone_number': phone_number,
         'cnic': "0000000000000", # Placeholder so DB stays consistent
         'password': password,
         'otp': otp
@@ -272,6 +291,7 @@ def verify_otp():
                 'email': temp_user['email'],
                 'full_name': temp_user['full_name'],
                 'username': temp_user['full_name'],  # Set username to full name initially
+                'phone_number': temp_user.get('phone_number', ''),
                 'cnic': temp_user['cnic'], # This will be the "00000..." string
                 'password': hashed_password,
                 'status': 'pending'
@@ -449,15 +469,19 @@ def edit_profile():
     if request.method == 'POST':
         # Get data from the HTML form
         name = request.form.get('name')
+        phone_number = request.form.get('phone_number')
         dept = request.form.get('department')
         interests = request.form.get('interests')
         about = request.form.get('about')
+
+        phone_number = ''.join(ch for ch in phone_number if ch.isdigit()) if phone_number else ''
 
         # Update the specific user document in MongoDB
         db.users.update_one(
             {'_id': ObjectId(user_id)},
             {'$set': {
                 'username': name,
+                'phone_number': phone_number,
                 'department': dept,
                 'interests': interests,
                 'about': about
@@ -473,6 +497,7 @@ def edit_profile():
     # Prepare user dict for template
     user = {
         "name": user_data.get('username', ''),
+        "phone_number": user_data.get('phone_number', ''),
         "department": user_data.get('department', ''),
         "interests": user_data.get('interests', ''),
         "about": user_data.get('about', '')
